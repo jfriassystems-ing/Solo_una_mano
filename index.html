@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominó Link · Crear Partida</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-900 text-white font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-lg mx-auto">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 text-center">
+            <h1 class="text-3xl font-bold mb-2 text-emerald-400">Domino Link 🁣🁤</h1>
+            <p class="text-slate-400 mb-6">Juega en red desde varios dispositivos.</p>
+
+            <div class="mb-6 text-left">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Cantidad de Jugadores:</label>
+                <select id="numJugadores" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                    <option value="2">2 Jugadores</option>
+                    <option value="3">3 Jugadores</option>
+                    <option value="4" selected>4 Jugadores</option>
+                </select>
+            </div>
+
+            <div class="mb-6 text-left">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Puntos para ganar:</label>
+                <select id="objetivo" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                    <option value="50">50 puntos (rápido)</option>
+                    <option value="100" selected>100 puntos (estándar)</option>
+                    <option value="150">150 puntos (largo)</option>
+                    <option value="200">200 puntos (maratón)</option>
+                </select>
+            </div>
+
+            <div class="mb-6 text-left">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Modo de juego:</label>
+                <div class="grid grid-cols-1 gap-2">
+                    <label class="flex items-center gap-3 p-3 bg-slate-900 rounded-xl cursor-pointer border border-slate-700 hover:border-emerald-500">
+                        <input type="radio" name="modo" value="multidispositivo" checked class="accent-emerald-500">
+                        <div>
+                            <div class="font-semibold text-sm">Multidispositivo (iPad + Celulares)</div>
+                            <div class="text-xs text-slate-400">Mesa en iPad, manos en celulares.</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-900 rounded-xl cursor-pointer border border-slate-700 hover:border-emerald-500">
+                        <input type="radio" name="modo" value="conmesa" class="accent-emerald-500">
+                        <div>
+                            <div class="font-semibold text-sm">Con Mesa (solo celulares)</div>
+                            <div class="text-xs text-slate-400">Mesa y mano en la misma pantalla.</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="crearPartida()" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-3 px-6 rounded-xl transition shadow-lg text-lg">
+                Crear Partida
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        async function crearPartida() {
+            const numJugadores = parseInt(document.getElementById('numJugadores').value);
+            const objetivo = parseInt(document.getElementById('objetivo').value);
+            const modo = document.querySelector('input[name="modo"]:checked').value;
+            const nuevaSalaId = nuevoSalaId();
+
+            // Generar reparto inicial completo
+            let pozo = generarFichas();
+            let manos = {};
+            let puntos = {};
+            for (let i = 1; i <= numJugadores; i++) {
+                manos[i] = pozo.splice(0, 7);
+                puntos[i] = 0;
+            }
+
+            const { error } = await supabaseClient
+                .from('partidas')
+                .insert([{
+                    sala_id: nuevaSalaId,
+                    estado: 'jugando',
+                    num_jugadores: numJugadores,
+                    objetivo_puntos: objetivo,
+                    turno: 1,
+                    tablero: [],
+                    pozo: pozo,
+                    manos: manos,
+                    puntos_acumulados: puntos,
+                    pases_seguidos: 0
+                }]);
+
+            if (error) {
+                alert("Error al crear partida: " + error.message);
+                return;
+            }
+
+            if (modo === 'conmesa') {
+                window.location.href = `jugador.html?sala=${nuevaSalaId}&jugador=1&mesa=1`;
+            } else {
+                window.location.href = `mesa.html?sala=${nuevaSalaId}&rol=mesa`;
+            }
+        }
+    </script>
+</body>
+</html>
