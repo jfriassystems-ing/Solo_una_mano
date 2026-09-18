@@ -19,6 +19,14 @@ async function renderVistaJugador() {
                 <div id="mesa-extremos" class="text-xs text-emerald-400 mt-1 font-semibold"></div>
                 <div id="contador-pozo" class="text-xs text-slate-400 mt-1"></div>
                 <div id="ultima-accion" class="text-[10px] text-slate-500 mt-1 italic"></div>
+
+                ${conMesa ? `
+                    <div class="mt-2 mb-1">
+                        <button onclick="mostrarQRCel()" class="bg-purple-600 hover:bg-purple-500 text-[11px] font-bold py-1.5 px-4 rounded-lg transition shadow">
+                            📱 Compartir con otros jugadores
+                        </button>
+                    </div>
+                ` : ''}
             </div>
 
             <div id="panel-mesa" class="${conMesa ? '' : 'hidden'} mb-3 bg-black/40 rounded-xl border border-white/10 p-2">
@@ -38,6 +46,16 @@ async function renderVistaJugador() {
             <div class="mt-3 space-y-2 px-1 pb-4">
                 <div id="acciones-container" class="flex gap-2 justify-center flex-wrap"></div>
                 <div id="contadores-otros" class="text-center text-xs text-slate-400"></div>
+            </div>
+        </div>
+
+        <!-- Modal QRs (solo modo con mesa) -->
+        <div id="modal-qr-cel" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+                <h3 class="text-base font-bold mb-1 text-emerald-400 text-center">📱 Compartir con otros jugadores</h3>
+                <p class="text-[10px] text-slate-400 mb-4 text-center">Cada uno escanea su QR. Verán la mesa + su mano.</p>
+                <div id="qr-container-cel" class="flex flex-wrap justify-center gap-3 mb-4"></div>
+                <button onclick="cerrarQRCel()" class="w-full text-xs text-slate-400 hover:text-white bg-slate-700 hover:bg-slate-600 py-2 rounded-lg">Cerrar</button>
             </div>
         </div>
 
@@ -147,8 +165,9 @@ function actualizarInterfazJugador(partida) {
             const mano = (partida.manos && partida.manos[i]) ? partida.manos[i] : [];
             const nombre = nombres[i] || `J${i}`;
             const esTurno = partida.turno == i;
-            html += `<span class="px-2 py-0.5 rounded ${esTurno ? 'bg-emerald-700 font-bold' : 'bg-slate-800'}">
-                ${nombre}: ${mano.length}🁢 · ${contarPuntos(mano)}pts
+            const unido = partida.manos && partida.manos[i];
+            html += `<span class="px-2 py-0.5 rounded ${esTurno ? 'bg-emerald-700 font-bold' : 'bg-slate-800'} ${!unido ? 'opacity-40' : ''}">
+                ${nombre}: ${unido ? `${mano.length}🁢 · ${contarPuntos(mano)}pts` : 'sin unir'}
             </span>`;
         }
         html += '</div>';
@@ -304,4 +323,65 @@ function ejecutarJugadaLado(lado) {
 
 function cerrarModalLado() {
     document.getElementById('modal-lado').style.display = 'none';
+}
+
+// ============ COMPARTIR QRs (modo con mesa) ============
+
+function mostrarQRCel() {
+    const modal = document.getElementById('modal-qr-cel');
+    if (!modal) {
+        alert("Este modo no permite compartir QRs.");
+        return;
+    }
+    generarQRCel();
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+function cerrarQRCel() {
+    const modal = document.getElementById('modal-qr-cel');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+function generarQRCel() {
+    const container = document.getElementById('qr-container-cel');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const numJugadores = window.estadoGlobal?.num_jugadores || 4;
+    const baseUrl = window.location.origin + window.location.pathname;
+
+    for (let i = 1; i <= numJugadores; i++) {
+        const esYo = (i == jugadorNum);
+        const wrapper = document.createElement('div');
+
+        if (esYo) {
+            wrapper.className = 'bg-emerald-900/60 border border-emerald-600 p-3 rounded-lg flex flex-col items-center';
+            wrapper.innerHTML = `
+                <span class="text-emerald-300 font-bold text-[10px] mb-1">Tú (J${i})</span>
+                <div class="w-[90px] h-[90px] flex items-center justify-center text-3xl">👤</div>
+            `;
+        } else {
+            wrapper.className = 'bg-white p-3 rounded-lg flex flex-col items-center shadow-lg';
+            wrapper.innerHTML = `
+                <span class="text-slate-800 font-bold text-[10px] mb-1">Jugador ${i}</span>
+                <div id="qr-cel-${i}"></div>
+                <a href="${baseUrl}?sala=${salaId}&jugador=${i}&mesa=1"
+                   class="mt-1 text-[9px] text-emerald-700 font-bold underline">Abrir aquí</a>
+            `;
+        }
+        container.appendChild(wrapper);
+
+        if (!esYo) {
+            const url = `${baseUrl}?sala=${salaId}&jugador=${i}&mesa=1`;
+            new QRCode(document.getElementById(`qr-cel-${i}`), {
+                text: url,
+                width: 90,
+                height: 90
+            });
+        }
+    }
 }
