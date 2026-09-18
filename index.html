@@ -56,6 +56,10 @@
             <button onclick="crearPartida()" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-3 px-6 rounded-xl transition shadow-lg text-lg">
                 Crear Partida
             </button>
+
+            <div class="mt-4 text-xs text-slate-500">
+                💡 En modo Multidispositivo aparece una mesa con QRs. Cada celular escanea su QR.
+            </div>
         </div>
     </div>
 
@@ -64,21 +68,19 @@
     <script src="js/utils.js"></script>
     <script>
         async function crearPartida() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = 'Creando...';
+
             const numJugadores = parseInt(document.getElementById('numJugadores').value);
             const objetivo = parseInt(document.getElementById('objetivo').value);
             const modo = document.querySelector('input[name="modo"]:checked').value;
             const nuevaSalaId = nuevoSalaId();
 
-            // Generar reparto inicial completo
-            let pozo = generarFichas();
-            let manos = {};
-            let puntos = {};
-            for (let i = 1; i <= numJugadores; i++) {
-                manos[i] = pozo.splice(0, 7);
-                puntos[i] = 0;
-            }
+            // ✅ Pozo completo (28 fichas). Cada jugador recibe sus 7 al unirse con su QR.
+            const pozoInicial = generarFichas();
 
-            const { error } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('partidas')
                 .insert([{
                     sala_id: nuevaSalaId,
@@ -87,16 +89,24 @@
                     objetivo_puntos: objetivo,
                     turno: 1,
                     tablero: [],
-                    pozo: pozo,
-                    manos: manos,
-                    puntos_acumulados: puntos,
-                    pases_seguidos: 0
-                }]);
+                    pozo: pozoInicial,
+                    manos: {},
+                    puntos_acumulados: {},
+                    pases_seguidos: 0,
+                    ultima_accion: 'Partida creada. Esperando jugadores...',
+                    num_ronda: 1
+                }])
+                .select();
 
             if (error) {
+                console.error(error);
                 alert("Error al crear partida: " + error.message);
+                btn.disabled = false;
+                btn.innerText = 'Crear Partida';
                 return;
             }
+
+            console.log('✅ Partida creada:', nuevaSalaId);
 
             if (modo === 'conmesa') {
                 window.location.href = `jugador.html?sala=${nuevaSalaId}&jugador=1&mesa=1`;

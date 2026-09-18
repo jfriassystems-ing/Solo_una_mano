@@ -44,8 +44,16 @@ function pintarPuntos(valor) {
 
 // Genera el HTML de una ficha con orientación y tamaño
 function fichaHTML(ficha, orientacion = 'v', tamaño = 'md') {
-    const sizesV = { sm: 'w-[36px] h-[72px]', md: 'w-[48px] h-[96px]', lg: 'w-[60px] h-[120px]' };
-    const sizesH = { sm: 'w-[72px] h-[36px]', md: 'w-[96px] h-[48px]', lg: 'w-[120px] h-[60px]' };
+    const sizesV = { 
+    sm: 'w-[28px] h-[56px]',    // ← antes 36x72
+    md: 'w-[48px] h-[96px]', 
+    lg: 'w-[60px] h-[120px]' 
+};
+const sizesH = { 
+    sm: 'w-[56px] h-[28px]',    // ← antes 72x36
+    md: 'w-[96px] h-[48px]', 
+    lg: 'w-[120px] h-[60px]' 
+};
 
     if (orientacion === 'v') {
         return `

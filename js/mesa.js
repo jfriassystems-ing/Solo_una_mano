@@ -137,18 +137,27 @@ function actualizarInterfazMesa(partida) {
     }
 
     // Tablero
-    const tableroEl = document.getElementById('tablero-central');
-    if (tablero.length > 0) {
-        let html = '<div class="flex items-center gap-1 px-2">';
-        tablero.forEach((f, idx) => {
-            html += (idx === 0) ? fichaHTML(f, 'v', 'md') : fichaHTML(f, 'h', 'md');
-            if (idx < tablero.length - 1) html += '<div class="w-1 h-1 bg-white/30 rounded-full flex-shrink-0"></div>';
-        });
-        html += '</div>';
-        tableroEl.innerHTML = html;
-    } else {
-        tableroEl.innerHTML = `<span class="text-slate-400 italic">Mesa limpia. ¡Comienza la partida!</span>`;
-    }
+const tableroEl = document.getElementById('tablero-central');
+if (tablero.length > 0) {
+    let html = '<div class="flex items-center gap-0.5 px-1 flex-wrap md:flex-nowrap">';
+    tablero.forEach((f, idx) => {
+        const esDoble = f[0] === f[1];
+        // Los dobles van perpendiculares; el resto horizontal
+        // La primera ficha siempre vertical
+        if (idx === 0) {
+            html += fichaHTML(f, 'v', 'sm');
+        } else if (esDoble) {
+            html += fichaHTML(f, 'v', 'sm');  // Doble = vertical
+        } else {
+            html += fichaHTML(f, 'h', 'sm');  // Normal = horizontal
+        }
+        if (idx < tablero.length - 1) {
+            html += '<div class="w-1 h-1 bg-white/30 rounded-full flex-shrink-0"></div>';
+        }
+    });
+    html += '</div>';
+    tableroEl.innerHTML = html;
+}
 
     // Panel de fin de ronda / partida
     const panel = document.getElementById('panel-fin-ronda');
@@ -211,4 +220,11 @@ function suscripcionMesa() {
             sonar('actualizar');
         })
         .subscribe();
+}
+
+function toggleQRs() {
+    const panel = document.getElementById('panel-qr');
+    if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
 }

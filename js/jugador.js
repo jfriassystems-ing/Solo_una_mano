@@ -160,17 +160,20 @@ function actualizarInterfazJugador(partida) {
     // Mini tablero (solo en modo conMesa)
     const tableroMini = document.getElementById('tablero-mini');
     if (tableroMini && conMesa) {
-        if (tablero.length > 0) {
-            let html = '<div class="flex items-center gap-0.5">';
-            tablero.forEach((f, idx) => {
-                html += (idx === 0) ? fichaHTML(f, 'v', 'sm') : fichaHTML(f, 'h', 'sm');
-            });
-            html += '</div>';
-            tableroMini.innerHTML = html;
-        } else {
-            tableroMini.innerHTML = `<span class="text-slate-500 text-xs italic">Mesa limpia</span>`;
-        }
+    if (tablero.length > 0) {
+        let html = '<div class="flex items-center gap-0.5">';
+        tablero.forEach((f, idx) => {
+            const esDoble = f[0] === f[1];
+            if (idx === 0 || esDoble) {
+                html += fichaHTML(f, 'v', 'sm');
+            } else {
+                html += fichaHTML(f, 'h', 'sm');
+            }
+        });
+        html += '</div>';
+        tableroMini.innerHTML = html;
     }
+}
 
     // Mano propia
     const misFichas = (partida.manos && partida.manos[jugadorNum]) ? partida.manos[jugadorNum] : [];
@@ -301,4 +304,21 @@ function ejecutarJugadaLado(lado) {
 
 function cerrarModalLado() {
     document.getElementById('modal-lado').style.display = 'none';
+}
+
+
+// Botón "Pasar celular" (solo en modo con mesa)
+if (conMesa && partida.estado === 'jugando') {
+    const siguiente = (parseInt(jugadorNum) % partida.num_jugadores) + 1;
+    accionesEl.innerHTML += `
+        <button onclick="pasarCelular(${siguiente})" class="bg-purple-600 hover:bg-purple-500 font-bold py-2 px-4 rounded-xl shadow-lg text-xs">
+            👉 Pasar a J${siguiente}
+        </button>
+    `;
+}
+
+function pasarCelular(num) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('jugador', num);
+    window.location.href = url.toString();
 }

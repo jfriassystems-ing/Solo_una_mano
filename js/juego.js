@@ -294,19 +294,42 @@ async function asegurarReparto(numJugador) {
 
     let manos = partida.manos || {};
     let pozo = partida.pozo || [];
+    let puntos = partida.puntos_acumulados || {};
+    let nombres = partida.nombres || {};
 
+    // Si este jugador aún no tiene mano, repartirle 7 fichas
     if (!manos[numJugador]) {
-        // Refrescar por si otro jugador repartió en paralelo
+        // Refrescar por si otro jugador ya repartió en paralelo
         const { data: fresh } = await supabaseClient
             .from('partidas').select('*').eq('sala_id', salaId).single();
-        if (fresh?.manos?.[numJugador]) return fresh;
 
+        if (fresh?.manos?.[numJugador]) {
+            return fresh;
+        }
+
+        // Repartir 7 fichas del pozo
+        if (pozo.length < 7) {
+            console.warn('⚠️ Pozo insuficiente para repartir 7 fichas');
+        }
         manos[numJugador] = pozo.splice(0, 7);
+
+        // Inicializar puntos y nombre si no existen
+        if (puntos[numJugador] === undefined) puntos[numJugador] = 0;
+        if (!nombres[numJugador]) nombres[numJugador] = `Jugador ${numJugador}`;
+
+        // Guardar
         await supabaseClient
             .from('partidas')
-            .update({ manos, pozo })
+            .update({
+                manos,
+                pozo,
+                puntos_acumulados: puntos,
+                nombres,
+                ultima_accion: `${nombres[numJugador]} se unió a la partida`
+            })
             .eq('sala_id', salaId);
-        return { ...partida, manos, pozo };
+
+        return { ...partida, manos, pozo, puntos_acumulados: puntos, nombres };
     }
     return partida;
 }
