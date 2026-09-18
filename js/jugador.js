@@ -29,10 +29,11 @@ async function renderVistaJugador() {
                 ` : ''}
             </div>
 
-            <div id="panel-mesa" class="${conMesa ? '' : 'hidden'} mb-3 bg-black/40 rounded-xl border border-white/10 p-2">
+            <!-- Panel de mesa con estilo real (fieltro verde) -->
+            <div id="panel-mesa" class="${conMesa ? '' : 'hidden'} mb-3">
                 <div class="text-[10px] text-slate-400 mb-1 text-center uppercase tracking-wider">Mesa</div>
-                <div id="tablero-mini" class="board-scroll flex items-center justify-center overflow-x-auto min-h-[70px] gap-1 py-1">
-                    <span class="text-slate-500 text-xs italic">Esperando...</span>
+                <div id="tablero-mini" class="mesa-superficie min-h-[100px] overflow-auto flex items-center justify-center">
+                    <span class="text-slate-300 text-xs italic">Esperando...</span>
                 </div>
             </div>
 
@@ -174,24 +175,10 @@ function actualizarInterfazJugador(partida) {
         contadoresOtros.innerHTML = html;
     }
 
-    // Mini tablero (visible cuando conMesa=1)
+    // Mini tablero con renderMesaReal (mesa serpenteante con dobles perpendiculares)
     const tableroMini = document.getElementById('tablero-mini');
     if (tableroMini && conMesa) {
-        if (tablero.length > 0) {
-            let html = '<div class="flex items-center gap-0.5">';
-            tablero.forEach((f, idx) => {
-                const esDoble = f[0] === f[1];
-                if (idx === 0 || esDoble) {
-                    html += fichaHTML(f, 'v', 'sm');
-                } else {
-                    html += fichaHTML(f, 'h', 'sm');
-                }
-            });
-            html += '</div>';
-            tableroMini.innerHTML = html;
-        } else {
-            tableroMini.innerHTML = `<span class="text-slate-500 text-xs italic">Mesa limpia</span>`;
-        }
+        tableroMini.innerHTML = renderMesaReal(tablero, 'sm');
     }
 
     // Mano propia

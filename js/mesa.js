@@ -43,8 +43,9 @@ async function renderVistaMesa() {
                 </div>
             </div>
 
-            <div id="tablero-central" class="board-scroll flex-1 my-2 bg-black/30 rounded-2xl border-2 border-dashed border-white/20 p-4 flex items-center justify-center overflow-x-auto overflow-y-hidden min-h-[160px]">
-                <span class="text-slate-400 italic">Esperando que los jugadores escaneen sus QRs...</span>
+            <!-- Superficie de la mesa (con textura tipo fieltro) -->
+            <div id="tablero-central" class="mesa-superficie flex-1 my-2 overflow-auto min-h-[220px] flex items-center justify-center">
+                <span class="text-slate-300 italic">Esperando que los jugadores escaneen sus QRs...</span>
             </div>
 
             <div id="panel-qr" class="bg-black/50 backdrop-blur p-3 rounded-2xl border border-white/10">
@@ -68,7 +69,7 @@ async function renderVistaMesa() {
     const { data } = await supabaseClient.from('partidas').select('*').eq('sala_id', salaId).single();
     if (!data) { alert("Sala no encontrada"); return; }
 
-    // Generar QRs — ahora apuntan a jugador.html con &mesa=1
+    // Generar QRs — apuntan a jugador.html con &mesa=1
     const baseUrl = window.location.origin + window.location.pathname.replace('mesa.html', '');
     const qrContainer = document.getElementById('qr-container');
     for (let i = 1; i <= data.num_jugadores; i++) {
@@ -109,10 +110,11 @@ function actualizarInterfazMesa(partida) {
             const mano = (partida.manos && partida.manos[i]) ? partida.manos[i] : [];
             const nombre = nombres[i] || `J${i}`;
             const esTurno = partida.turno == i && partida.estado === 'jugando';
+            const unido = partida.manos && partida.manos[i];
             html += `
-                <div class="text-[10px] md:text-xs px-2 py-1 rounded-lg border ${esTurno ? 'bg-emerald-600 border-emerald-400 font-bold' : 'bg-slate-800/60 border-slate-600'}">
+                <div class="text-[10px] md:text-xs px-2 py-1 rounded-lg border ${esTurno ? 'bg-emerald-600 border-emerald-400 font-bold' : 'bg-slate-800/60 border-slate-600'} ${!unido ? 'opacity-50' : ''}">
                     <div>${nombre}</div>
-                    <div class="text-[10px] opacity-80">${mano.length}🁢 · ${puntos[i] || 0}pts</div>
+                    <div class="text-[10px] opacity-80">${unido ? `${mano.length}🁢 · ${puntos[i] || 0}pts` : 'sin unir'}</div>
                 </div>
             `;
         }
@@ -136,25 +138,10 @@ function actualizarInterfazMesa(partida) {
         extremosInfo.innerHTML = `Mesa vacía · Pozo: ${(partida.pozo || []).length}`;
     }
 
-    // Tablero con dobles perpendiculares y fichas más chicas
+    // Renderizar tablero como mesa REAL (serpenteante con dobles perpendiculares)
     const tableroEl = document.getElementById('tablero-central');
-    if (tablero.length > 0) {
-        let html = '<div class="flex items-center gap-0.5 px-1 flex-wrap md:flex-nowrap">';
-        tablero.forEach((f, idx) => {
-            const esDoble = f[0] === f[1];
-            if (idx === 0 || esDoble) {
-                html += fichaHTML(f, 'v', 'sm');
-            } else {
-                html += fichaHTML(f, 'h', 'sm');
-            }
-            if (idx < tablero.length - 1) {
-                html += '<div class="w-1 h-1 bg-white/30 rounded-full flex-shrink-0"></div>';
-            }
-        });
-        html += '</div>';
-        tableroEl.innerHTML = html;
-    } else {
-        tableroEl.innerHTML = `<span class="text-slate-400 italic">Mesa limpia. ¡Comienza la partida!</span>`;
+    if (tableroEl) {
+        tableroEl.innerHTML = renderMesaReal(tablero, 'md');
     }
 
     // Ocultar QRs si todos los jugadores ya se unieron

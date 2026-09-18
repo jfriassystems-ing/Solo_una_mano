@@ -97,3 +97,38 @@ function sonar(nombre) {
 function nuevoSalaId() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
+// ============================================
+// RENDERIZADO DE MESA REAL (serpenteante)
+// ============================================
+
+/**
+ * Renderiza el tablero de dominó como una mesa real:
+ * - La primera ficha va vertical
+ * - Los dobles van perpendiculares (verticales en flujo horizontal)
+ * - Las fichas normales van horizontales conectando extremos
+ * - Se envuelve (flex-wrap) simulando que la mesa dobla
+ */
+function renderMesaReal(tablero, tamaño = 'sm') {
+    if (!tablero || tablero.length === 0) {
+        return `<div class="text-slate-300 italic text-center py-4 w-full">Mesa limpia. ¡Comienza la partida!</div>`;
+    }
+
+    let html = '<div class="mesa-real">';
+
+    tablero.forEach((f, idx) => {
+        const esDoble = f[0] === f[1];
+        const esPrimera = idx === 0;
+
+        let orientacion;
+        if (esPrimera || esDoble) {
+            orientacion = 'v';
+        } else {
+            orientacion = 'h';
+        }
+
+        html += `<div class="ficha-tile">${fichaHTML(f, orientacion, tamaño)}</div>`;
+    });
+
+    html += '</div>';
+    return html;
+}
