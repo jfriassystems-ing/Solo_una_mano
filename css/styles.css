@@ -69,7 +69,6 @@
 .board-scroll::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
 .board-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
 
-/* Animación de ficha nueva */
 @keyframes ficha-entra {
     0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
     60%  { transform: scale(1.1) rotate(3deg); opacity: 1; }

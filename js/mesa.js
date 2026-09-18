@@ -25,6 +25,9 @@ async function renderVistaMesa() {
                     <button onclick="reiniciarPartida()" class="bg-amber-600 hover:bg-amber-500 text-xs font-bold py-2 px-3 rounded-xl transition shadow cursor-pointer" title="Reiniciar partida completa">
                         🔄
                     </button>
+                    <button onclick="toggleQRs()" class="bg-slate-600 hover:bg-slate-500 text-xs font-bold py-2 px-3 rounded-xl transition shadow cursor-pointer" title="Mostrar/ocultar QRs">
+                        📱
+                    </button>
                     <div id="turno-info" class="text-xs md:text-sm bg-emerald-900/80 px-3 py-2 rounded-xl border border-emerald-500/50">
                         Cargando...
                     </div>
@@ -45,11 +48,10 @@ async function renderVistaMesa() {
             </div>
 
             <div id="panel-qr" class="bg-black/50 backdrop-blur p-3 rounded-2xl border border-white/10">
-                <h3 class="text-xs md:text-sm font-semibold text-slate-300 mb-3 text-center">📱 Escanea con cada celular para unirte:</h3>
+                <h3 class="text-xs md:text-sm font-semibold text-slate-300 mb-3 text-center">📱 Escanea con cada celular para unirte (verás la mesa + tu mano):</h3>
                 <div id="qr-container" class="flex flex-wrap justify-center gap-4"></div>
             </div>
 
-            <!-- Panel de fin de ronda -->
             <div id="panel-fin-ronda" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm items-center justify-center p-4 z-50">
                 <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
                     <h3 id="fin-titulo" class="text-2xl font-bold mb-4 text-emerald-400"></h3>
@@ -66,7 +68,7 @@ async function renderVistaMesa() {
     const { data } = await supabaseClient.from('partidas').select('*').eq('sala_id', salaId).single();
     if (!data) { alert("Sala no encontrada"); return; }
 
-    // Generar QRs
+    // Generar QRs — ahora apuntan a jugador.html con &mesa=1
     const baseUrl = window.location.origin + window.location.pathname.replace('mesa.html', '');
     const qrContainer = document.getElementById('qr-container');
     for (let i = 1; i <= data.num_jugadores; i++) {
@@ -78,7 +80,7 @@ async function renderVistaMesa() {
             <a href="${baseUrl}jugador.html?sala=${salaId}&jugador=${i}&mesa=1" class="mt-2 text-[10px] text-emerald-700 font-bold underline">Abrir aquí</a>
         `;
         qrContainer.appendChild(wrapper);
-        const jugadorUrl = `${baseUrl}jugador.html?sala=${salaId}&jugador=${i}`;
+        const jugadorUrl = `${baseUrl}jugador.html?sala=${salaId}&jugador=${i}&mesa=1`;
         new QRCode(document.getElementById(`qr-${i}`), { text: jugadorUrl, width: 90, height: 90 });
     }
 
@@ -101,7 +103,6 @@ function actualizarInterfazMesa(partida) {
     const nombres = partida.nombres || {};
     const puntos = partida.puntos_acumulados || {};
 
-    // Contadores con nombre, fichas y puntos
     if (contadores) {
         let html = '';
         for (let i = 1; i <= partida.num_jugadores; i++) {
@@ -126,7 +127,6 @@ function actualizarInterfazMesa(partida) {
         turnoInfo.innerHTML = `<strong class="text-yellow-400">🏆 ¡Partida terminada!</strong>`;
     }
 
-    // Extremos
     const tablero = partida.tablero || [];
     if (tablero.length > 0) {
         const izq = tablero[0][0];
@@ -136,30 +136,38 @@ function actualizarInterfazMesa(partida) {
         extremosInfo.innerHTML = `Mesa vacía · Pozo: ${(partida.pozo || []).length}`;
     }
 
-    // Tablero
-const tableroEl = document.getElementById('tablero-central');
-if (tablero.length > 0) {
-    let html = '<div class="flex items-center gap-0.5 px-1 flex-wrap md:flex-nowrap">';
-    tablero.forEach((f, idx) => {
-        const esDoble = f[0] === f[1];
-        // Los dobles van perpendiculares; el resto horizontal
-        // La primera ficha siempre vertical
-        if (idx === 0) {
-            html += fichaHTML(f, 'v', 'sm');
-        } else if (esDoble) {
-            html += fichaHTML(f, 'v', 'sm');  // Doble = vertical
-        } else {
-            html += fichaHTML(f, 'h', 'sm');  // Normal = horizontal
-        }
-        if (idx < tablero.length - 1) {
-            html += '<div class="w-1 h-1 bg-white/30 rounded-full flex-shrink-0"></div>';
-        }
-    });
-    html += '</div>';
-    tableroEl.innerHTML = html;
-}
+    // Tablero con dobles perpendiculares y fichas más chicas
+    const tableroEl = document.getElementById('tablero-central');
+    if (tablero.length > 0) {
+        let html = '<div class="flex items-center gap-0.5 px-1 flex-wrap md:flex-nowrap">';
+        tablero.forEach((f, idx) => {
+            const esDoble = f[0] === f[1];
+            if (idx === 0 || esDoble) {
+                html += fichaHTML(f, 'v', 'sm');
+            } else {
+                html += fichaHTML(f, 'h', 'sm');
+            }
+            if (idx < tablero.length - 1) {
+                html += '<div class="w-1 h-1 bg-white/30 rounded-full flex-shrink-0"></div>';
+            }
+        });
+        html += '</div>';
+        tableroEl.innerHTML = html;
+    } else {
+        tableroEl.innerHTML = `<span class="text-slate-400 italic">Mesa limpia. ¡Comienza la partida!</span>`;
+    }
 
-    // Panel de fin de ronda / partida
+    // Ocultar QRs si todos los jugadores ya se unieron
+    const panelQR = document.getElementById('panel-qr');
+    if (panelQR) {
+        const todosUnidos = Object.keys(partida.manos || {}).length >= partida.num_jugadores;
+        if (todosUnidos && partida.estado === 'jugando') {
+            panelQR.style.display = 'none';
+        } else {
+            panelQR.style.display = 'block';
+        }
+    }
+
     const panel = document.getElementById('panel-fin-ronda');
     if (partida.estado === 'ronda_terminada' || partida.estado === 'partida_terminada') {
         mostrarPanelFin(partida);

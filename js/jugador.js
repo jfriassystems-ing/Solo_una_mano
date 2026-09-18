@@ -36,7 +36,7 @@ async function renderVistaJugador() {
             </div>
 
             <div class="mt-3 space-y-2 px-1 pb-4">
-                <div id="acciones-container" class="flex gap-2 justify-center"></div>
+                <div id="acciones-container" class="flex gap-2 justify-center flex-wrap"></div>
                 <div id="contadores-otros" class="text-center text-xs text-slate-400"></div>
             </div>
         </div>
@@ -67,12 +67,10 @@ async function renderVistaJugador() {
         </div>
     `;
 
-    // Asegurar reparto
     const partida = await asegurarReparto(jugadorNum);
     if (!partida) { alert("Sala no encontrada"); return; }
     actualizarInterfazJugador(partida);
 
-    // Suscripción realtime
     supabaseClient
         .channel('room-jugador-' + jugadorNum + '-' + salaId)
         .on('postgres_changes', {
@@ -157,23 +155,25 @@ function actualizarInterfazJugador(partida) {
         contadoresOtros.innerHTML = html;
     }
 
-    // Mini tablero (solo en modo conMesa)
+    // Mini tablero (visible cuando conMesa=1)
     const tableroMini = document.getElementById('tablero-mini');
     if (tableroMini && conMesa) {
-    if (tablero.length > 0) {
-        let html = '<div class="flex items-center gap-0.5">';
-        tablero.forEach((f, idx) => {
-            const esDoble = f[0] === f[1];
-            if (idx === 0 || esDoble) {
-                html += fichaHTML(f, 'v', 'sm');
-            } else {
-                html += fichaHTML(f, 'h', 'sm');
-            }
-        });
-        html += '</div>';
-        tableroMini.innerHTML = html;
+        if (tablero.length > 0) {
+            let html = '<div class="flex items-center gap-0.5">';
+            tablero.forEach((f, idx) => {
+                const esDoble = f[0] === f[1];
+                if (idx === 0 || esDoble) {
+                    html += fichaHTML(f, 'v', 'sm');
+                } else {
+                    html += fichaHTML(f, 'h', 'sm');
+                }
+            });
+            html += '</div>';
+            tableroMini.innerHTML = html;
+        } else {
+            tableroMini.innerHTML = `<span class="text-slate-500 text-xs italic">Mesa limpia</span>`;
+        }
     }
-}
 
     // Mano propia
     const misFichas = (partida.manos && partida.manos[jugadorNum]) ? partida.manos[jugadorNum] : [];
@@ -304,21 +304,4 @@ function ejecutarJugadaLado(lado) {
 
 function cerrarModalLado() {
     document.getElementById('modal-lado').style.display = 'none';
-}
-
-
-// Botón "Pasar celular" (solo en modo con mesa)
-if (conMesa && partida.estado === 'jugando') {
-    const siguiente = (parseInt(jugadorNum) % partida.num_jugadores) + 1;
-    accionesEl.innerHTML += `
-        <button onclick="pasarCelular(${siguiente})" class="bg-purple-600 hover:bg-purple-500 font-bold py-2 px-4 rounded-xl shadow-lg text-xs">
-            👉 Pasar a J${siguiente}
-        </button>
-    `;
-}
-
-function pasarCelular(num) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('jugador', num);
-    window.location.href = url.toString();
 }

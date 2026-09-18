@@ -58,7 +58,7 @@
             </button>
 
             <div class="mt-4 text-xs text-slate-500">
-                💡 En modo Multidispositivo aparece una mesa con QRs. Cada celular escanea su QR.
+                💡 En modo Multidispositivo aparece una mesa con QRs. Cada celular escanea su QR y verá la mesa + su mano.
             </div>
         </div>
     </div>
@@ -77,7 +77,7 @@
             const modo = document.querySelector('input[name="modo"]:checked').value;
             const nuevaSalaId = nuevoSalaId();
 
-            // ✅ Pozo completo (28 fichas). Cada jugador recibe sus 7 al unirse con su QR.
+            // Pozo completo (28 fichas). Cada jugador recibe sus 7 al unirse con su QR.
             const pozoInicial = generarFichas();
 
             const { data, error } = await supabaseClient

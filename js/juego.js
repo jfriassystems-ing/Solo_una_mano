@@ -79,7 +79,6 @@ async function colocarFicha(indexFicha, ficha, lado) {
     if (manos[jugadorNum].length === 0) {
         ganadorRonda = jugadorNum;
         estado = 'ronda_terminada';
-        // Sumar puntos de los rivales al ganador
         let ptsGanados = 0;
         for (let i = 1; i <= partida.num_jugadores; i++) {
             if (i == jugadorNum) continue;
@@ -88,8 +87,6 @@ async function colocarFicha(indexFicha, ficha, lado) {
         nuevasPuntos[jugadorNum] = (nuevasPuntos[jugadorNum] || 0) + ptsGanados;
     }
 
-    // Verificar tranca (todos pasan y no hay pozo)
-    let pasesSeguidos = partida.pases_seguidos || 0;
     let siguienteTurno = (partida.turno % partida.num_jugadores) + 1;
 
     await supabaseClient
@@ -106,7 +103,6 @@ async function colocarFicha(indexFicha, ficha, lado) {
         })
         .eq('sala_id', salaId);
 
-    // Verificar si alguien alcanzó el objetivo de puntos
     if (ganadorRonda) {
         const alcanzo = Object.entries(nuevasPuntos).some(([j, p]) => p >= partida.objetivo_puntos);
         if (alcanzo) {
@@ -161,12 +157,10 @@ async function pasarTurno() {
     let estado = partida.estado;
     let ganadorRonda = null;
 
-    // Si todos los jugadores pasaron → TRACA
     if (pasesSeguidos >= partida.num_jugadores) {
         ganadorRonda = ganadorPorTranca(partida.manos, partida.num_jugadores);
         estado = 'ronda_terminada';
 
-        // Sumar puntos de los rivales al ganador por tranca
         let nuevasPuntos = { ...(partida.puntos_acumulados || {}) };
         let ptsGanados = 0;
         for (let i = 1; i <= partida.num_jugadores; i++) {
@@ -186,7 +180,6 @@ async function pasarTurno() {
             })
             .eq('sala_id', salaId);
 
-        // Verificar partida terminada
         const alcanzo = Object.entries(nuevasPuntos).some(([j, p]) => p >= partida.objetivo_puntos);
         if (alcanzo) {
             const ganadorPartida = Object.entries(nuevasPuntos)
@@ -297,9 +290,7 @@ async function asegurarReparto(numJugador) {
     let puntos = partida.puntos_acumulados || {};
     let nombres = partida.nombres || {};
 
-    // Si este jugador aún no tiene mano, repartirle 7 fichas
     if (!manos[numJugador]) {
-        // Refrescar por si otro jugador ya repartió en paralelo
         const { data: fresh } = await supabaseClient
             .from('partidas').select('*').eq('sala_id', salaId).single();
 
@@ -307,17 +298,14 @@ async function asegurarReparto(numJugador) {
             return fresh;
         }
 
-        // Repartir 7 fichas del pozo
         if (pozo.length < 7) {
             console.warn('⚠️ Pozo insuficiente para repartir 7 fichas');
         }
         manos[numJugador] = pozo.splice(0, 7);
 
-        // Inicializar puntos y nombre si no existen
         if (puntos[numJugador] === undefined) puntos[numJugador] = 0;
         if (!nombres[numJugador]) nombres[numJugador] = `Jugador ${numJugador}`;
 
-        // Guardar
         await supabaseClient
             .from('partidas')
             .update({
