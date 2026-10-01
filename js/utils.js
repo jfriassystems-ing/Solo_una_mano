@@ -1,5 +1,5 @@
 // ============================================
-// UTILIDADES GENERALES v2
+// UTILIDADES GENERALES v3 (tablero camino)
 // ============================================
 
 // Genera las 28 fichas del dominó estándar (doble-6), mezcladas
@@ -42,33 +42,22 @@ function pintarPuntos(valor) {
     return html;
 }
 
-// Genera el HTML de una ficha con orientación y tamaño
-function fichaHTML(ficha, orientacion = 'v', tamaño = 'md') {
-    const sizesV = {
-        sm: 'w-[28px] h-[56px]',
-        md: 'w-[48px] h-[96px]',
-        lg: 'w-[60px] h-[120px]'
-    };
-    const sizesH = {
-        sm: 'w-[56px] h-[28px]',
-        md: 'w-[96px] h-[48px]',
-        lg: 'w-[120px] h-[60px]'
-    };
-
+// Genera el HTML de una ficha (dentro de una celda)
+function fichaHTML(ficha, orientacion = 'v') {
     if (orientacion === 'v') {
         return `
-            <div class="domino-tile domino-v ${sizesV[tamaño]} flex-shrink-0">
-                <div class="flex-1 w-full flex items-center justify-center">${pintarPuntos(ficha[0])}</div>
+            <div class="domino-tile domino-v">
+                <div class="half">${pintarPuntos(ficha[0])}</div>
                 <div class="divider"></div>
-                <div class="flex-1 w-full flex items-center justify-center">${pintarPuntos(ficha[1])}</div>
+                <div class="half">${pintarPuntos(ficha[1])}</div>
             </div>
         `;
     }
     return `
-        <div class="domino-tile domino-h ${sizesH[tamaño]} flex-shrink-0">
-            <div class="flex-1 h-full flex items-center justify-center">${pintarPuntos(ficha[0])}</div>
+        <div class="domino-tile domino-h">
+            <div class="half">${pintarPuntos(ficha[0])}</div>
             <div class="divider"></div>
-            <div class="flex-1 h-full flex items-center justify-center">${pintarPuntos(ficha[1])}</div>
+            <div class="half">${pintarPuntos(ficha[1])}</div>
         </div>
     `;
 }
@@ -87,6 +76,90 @@ function fichasValidas(mano, tablero) {
 // Genera un ID de sala aleatorio
 function nuevoSalaId() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// ============================================
+// CAMINO DEL TABLERO (serpentina)
+// ============================================
+// Coordenadas tipo Excel. La primera ficha va en el CENTRO (índice 13 = E8).
+// Cuando alguien juega a la izquierda → índice -1
+// Cuando alguien juega a la derecha → índice +1
+const CAMINO = [
+    // Brazo izquierdo arriba (6 celdas) - índices 0-5
+    { col: 2, fila: 4, orient: 'v' },  // B4
+    { col: 2, fila: 3, orient: 'v' },  // B3
+    { col: 2, fila: 2, orient: 'v' },  // B2
+    { col: 2, fila: 1, orient: 'v' },  // B1
+    { col: 3, fila: 1, orient: 'h' },  // C1
+    { col: 4, fila: 1, orient: 'h' },  // D1
+    // Columna central (15 celdas) - índices 6-20
+    { col: 5, fila: 1,  orient: 'v' }, // E1
+    { col: 5, fila: 2,  orient: 'v' }, // E2
+    { col: 5, fila: 3,  orient: 'v' }, // E3
+    { col: 5, fila: 4,  orient: 'v' }, // E4
+    { col: 5, fila: 5,  orient: 'v' }, // E5
+    { col: 5, fila: 6,  orient: 'v' }, // E6
+    { col: 5, fila: 7,  orient: 'v' }, // E7
+    { col: 5, fila: 8,  orient: 'v' }, // E8 ← CENTRO (índice 13)
+    { col: 5, fila: 9,  orient: 'v' }, // E9
+    { col: 5, fila: 10, orient: 'v' }, // E10
+    { col: 5, fila: 11, orient: 'v' }, // E11
+    { col: 5, fila: 12, orient: 'v' }, // E12
+    { col: 5, fila: 13, orient: 'v' }, // E13
+    { col: 5, fila: 14, orient: 'v' }, // E14
+    { col: 5, fila: 15, orient: 'v' }, // E15
+    // Brazo derecho abajo (7 celdas) - índices 21-27
+    { col: 6, fila: 15, orient: 'h' }, // F15
+    { col: 7, fila: 15, orient: 'h' }, // G15
+    { col: 8, fila: 15, orient: 'h' }, // H15
+    { col: 8, fila: 14, orient: 'v' }, // H14
+    { col: 8, fila: 13, orient: 'v' }, // H13
+    { col: 8, fila: 12, orient: 'v' }, // H12
+    { col: 8, fila: 11, orient: 'v' }  // H11
+];
+
+const CELDA_CENTRO = 13; // índice de E8 en CAMINO
+
+// Coloca una ficha en la posición indicada del camino
+function celdaEnPosicion(index, ficha) {
+    if (index < 0 || index >= CAMINO.length) return '';
+    const c = CAMINO[index];
+    return `
+        <div class="celda-ficha" style="grid-column:${c.col}; grid-row:${c.fila};">
+            ${fichaHTML(ficha, c.orient)}
+        </div>
+    `;
+}
+
+// Renderiza todas las celdas del camino (vacías o con fichas)
+function renderMesaCamino(tableroPos, tableroViejo, ultimaJugada) {
+    // tableroPos: array de { celda: index, ficha: [a,b] }
+    const posiciones = tableroPos || [];
+
+    let html = '<div class="mesa-camino">';
+
+    // 1. Pintar todas las celdas del camino (fondo)
+    CAMINO.forEach((c, i) => {
+        const tieneFicha = posiciones.find(p => p.celda === i);
+        const esUltima = ultimaJugada === i;
+        html += `<div class="celda ${tieneFicha ? 'ocupada' : ''} ${esUltima ? 'nueva' : ''}"
+                      style="grid-column:${c.col}; grid-row:${c.fila};"
+                      data-celda="${i}"></div>`;
+    });
+
+    // 2. Pintar las fichas encima
+    posiciones.forEach(p => {
+        const c = CAMINO[p.celda];
+        if (!c) return;
+        html += `
+            <div class="celda-ficha" style="grid-column:${c.col}; grid-row:${c.fila};">
+                ${fichaHTML(p.ficha, c.orient)}
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    return html;
 }
 
 // ============================================
@@ -112,9 +185,7 @@ function sonar(nombre) {
     try {
         if (!sonidosCargados) inicializarSonidos();
         if (sonidos[nombre]) sonidos[nombre].play();
-    } catch (e) {
-        // Fallback silencioso
-    }
+    } catch (e) {}
 }
 
 // ============================================
@@ -125,7 +196,7 @@ function vibrar(ms = 30) {
 }
 
 // ============================================
-// WAKE LOCK (evitar que se apague la pantalla)
+// WAKE LOCK
 // ============================================
 let wakeLock = null;
 async function activarWakeLock() {
@@ -133,58 +204,10 @@ async function activarWakeLock() {
         if ('wakeLock' in navigator) {
             wakeLock = await navigator.wakeLock.request('screen');
         }
-    } catch (e) {
-        console.warn('Wake Lock no disponible:', e);
-    }
+    } catch (e) {}
 }
 document.addEventListener('visibilitychange', async () => {
     if (wakeLock !== null && document.visibilityState === 'visible') {
         activarWakeLock();
     }
 });
-
-// ============================================
-// RENDERIZADO DE MESA REAL (serpenteante)
-// ============================================
-function renderMesaReal(tablero, tamaño = 'sm', ultimaFicha = -1) {
-    if (!tablero || tablero.length === 0) {
-        return `<div class="text-slate-300 italic text-center py-4 w-full">Mesa limpia. ¡Comienza la partida!</div>`;
-    }
-
-    let html = '<div class="mesa-real">';
-
-    tablero.forEach((f, idx) => {
-        const esDoble = f[0] === f[1];
-        const esPrimera = idx === 0;
-        const esNueva = (ultimaFicha === idx);
-
-        let orientacion;
-        if (esPrimera || esDoble) {
-            orientacion = 'v';
-        } else {
-            orientacion = 'h';
-        }
-
-        html += `<div class="ficha-tile ${esNueva ? 'nueva' : ''}">${fichaHTML(f, orientacion, tamaño)}</div>`;
-    });
-
-    html += '</div>';
-    return html;
-}
-
-// Detecta cuál ficha se acaba de agregar comparando tableros
-function detectarFichaNueva(tableroNuevo, tableroViejo) {
-    if (!tableroViejo || tableroNuevo.length > tableroViejo.length) {
-        // Si creció, la nueva está al principio o al final
-        if (tableroNuevo.length === 0) return -1;
-        // Comparar extremos
-        const izqViejo = tableroViejo?.[0];
-        const derViejo = tableroViejo?.[tableroViejo.length - 1];
-        const izqNuevo = tableroNuevo[0];
-        const derNuevo = tableroNuevo[tableroNuevo.length - 1];
-
-        if (JSON.stringify(izqNuevo) !== JSON.stringify(izqViejo)) return 0;
-        if (JSON.stringify(derNuevo) !== JSON.stringify(derViejo)) return tableroNuevo.length - 1;
-    }
-    return -1;
-}

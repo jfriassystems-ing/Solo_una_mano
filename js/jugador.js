@@ -29,13 +29,11 @@ async function renderVistaJugador() {
                 ` : ''}
             </div>
 
-                       <!-- Panel de mesa con perspectiva 3D -->
+            <!-- Panel de mesa -->
             <div id="panel-mesa" class="${conMesa ? '' : 'hidden'} mb-3">
                 <div class="text-[10px] text-slate-400 mb-1 text-center uppercase tracking-wider">Mesa</div>
-                <div class="mesa-superficie tablero-mini-container">
-                    <div id="tablero-mini" class="w-full flex items-center justify-center">
-                        <span class="text-slate-300 text-xs italic">Esperando...</span>
-                    </div>
+                <div class="mesa-superficie">
+                    <div id="tablero-mini" class="w-full"></div>
                 </div>
             </div>
 
@@ -43,7 +41,7 @@ async function renderVistaJugador() {
                 <h3 class="text-xs text-slate-400 mb-2 text-center uppercase tracking-wider">
                     Tus Fichas · <span id="mis-puntos" class="text-emerald-400 font-bold">0 pts</span>
                 </h3>
-                <div id="mano-jugador" class="flex flex-wrap justify-center gap-2 px-1"></div>
+                <div id="mano-jugador" class="mano-jugador flex flex-wrap justify-center gap-2 px-1"></div>
             </div>
 
             <div class="mt-3 space-y-2 px-1 pb-4">
@@ -52,9 +50,9 @@ async function renderVistaJugador() {
             </div>
         </div>
 
-        <!-- Modal QRs (solo modo con mesa) -->
+        <!-- Modal QRs -->
         <div id="modal-qr-cel" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto modal-entra">
                 <h3 class="text-base font-bold mb-1 text-emerald-400 text-center">📱 Compartir con otros jugadores</h3>
                 <p class="text-[10px] text-slate-400 mb-4 text-center">Cada uno escanea su QR. Verán la mesa + su mano.</p>
                 <div id="qr-container-cel" class="flex flex-wrap justify-center gap-3 mb-4"></div>
@@ -62,9 +60,9 @@ async function renderVistaJugador() {
             </div>
         </div>
 
-        <!-- Modal elección de lado -->
+        <!-- Modal lado -->
         <div id="modal-lado" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-xs w-full text-center shadow-2xl">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-xs w-full text-center shadow-2xl modal-entra">
                 <h3 class="text-lg font-bold mb-3 text-emerald-400">¿Dónde jugar la ficha?</h3>
                 <p id="modal-ficha-txt" class="text-sm text-slate-300 mb-4 font-mono"></p>
                 <div class="flex gap-3">
@@ -75,9 +73,9 @@ async function renderVistaJugador() {
             </div>
         </div>
 
-        <!-- Modal fin de ronda -->
+        <!-- Modal fin -->
         <div id="modal-fin" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full text-center shadow-2xl">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full text-center shadow-2xl modal-entra">
                 <h3 id="fin-titulo-cel" class="text-xl font-bold mb-3"></h3>
                 <div id="fin-detalle-cel" class="text-sm text-slate-300 mb-4"></div>
                 <div id="fin-marcador-cel" class="bg-slate-900 rounded-xl p-3 mb-4 text-xs"></div>
@@ -101,7 +99,8 @@ async function renderVistaJugador() {
             actualizarInterfazJugador(payload.new);
         })
         .subscribe();
-        activarWakeLock();
+
+    activarWakeLock();
 }
 
 async function editarNombre() {
@@ -127,10 +126,8 @@ function actualizarInterfazJugador(partida) {
     const ultimaAccion = document.getElementById('ultima-accion');
 
     document.getElementById('nombre-badge').innerHTML = `${nombres[jugadorNum] || 'J' + jugadorNum} ✏️`;
-
     if (ultimaAccion) ultimaAccion.innerText = partida.ultima_accion || '';
 
-    // Estados de fin
     const modalFin = document.getElementById('modal-fin');
     if (partida.estado === 'ronda_terminada' || partida.estado === 'partida_terminada') {
         mostrarFinJugador(partida);
@@ -140,7 +137,6 @@ function actualizarInterfazJugador(partida) {
         modalFin.style.display = 'none';
     }
 
-    // Turno
     if (esTuTurno) {
         estadoTurno.innerHTML = "🟢 ¡Es tu turno!";
         estadoTurno.className = "text-base font-bold text-emerald-400 mt-2 animate-pulse";
@@ -149,19 +145,16 @@ function actualizarInterfazJugador(partida) {
         estadoTurno.className = "text-base font-medium text-slate-400 mt-2";
     }
 
-    // Extremos
     const tablero = partida.tablero || [];
-    let izq = null, der = null;
     if (tablero.length > 0) {
-        izq = tablero[0][0];
-        der = tablero[tablero.length - 1][1];
+        const izq = tablero[0][0];
+        const der = tablero[tablero.length - 1][1];
         mesaExtremos.innerHTML = `Extremos: [${izq}] ↔ [${der}]`;
     } else {
         mesaExtremos.innerHTML = `Mesa vacía`;
     }
     if (contadorPozo) contadorPozo.innerHTML = `Pozo: ${(partida.pozo || []).length} fichas`;
 
-    // Contadores de rivales
     if (contadoresOtros) {
         let html = '<div class="flex justify-center gap-2 flex-wrap">';
         for (let i = 1; i <= partida.num_jugadores; i++) {
@@ -178,15 +171,17 @@ function actualizarInterfazJugador(partida) {
         contadoresOtros.innerHTML = html;
     }
 
-    // Mini tablero con renderMesaReal (mesa serpenteante con dobles perpendiculares)
+    // Renderizar tablero con camino
     const tableroMini = document.getElementById('tablero-mini');
     if (tableroMini && conMesa) {
-        const fichaNueva = detectarFichaNueva(tablero, window.tableroAnterior);
-tableroMini.innerHTML = renderMesaReal(tablero, 'sm', fichaNueva);
-window.tableroAnterior = JSON.parse(JSON.stringify(tablero));
+        tableroMini.innerHTML = renderMesaCamino(
+            partida.tablero_pos || [],
+            window.tableroPosAnterior,
+            -1
+        );
+        window.tableroPosAnterior = JSON.parse(JSON.stringify(partida.tablero_pos || []));
     }
 
-    // Mano propia
     const misFichas = (partida.manos && partida.manos[jugadorNum]) ? partida.manos[jugadorNum] : [];
     const misPuntos = document.getElementById('mis-puntos');
     if (misPuntos) misPuntos.innerText = `${contarPuntos(misFichas)} pts`;
@@ -198,16 +193,14 @@ window.tableroAnterior = JSON.parse(JSON.stringify(tablero));
         return `
             <button onclick='intentarJugarFicha(${index}, ${JSON.stringify(f)})'
                 ${!esTuTurno ? 'disabled' : ''}
-                class="domino-tile p-1 text-slate-800 font-bold flex flex-col items-center justify-center w-[50px] h-[92px] shadow-xl relative
-                ${!esTuTurno ? 'opacity-40 cursor-not-allowed' : (valida ? 'border-emerald-500 hover:scale-105 ring-2 ring-emerald-500/50' : 'opacity-70 border-slate-400')}">
-                <div class="flex-1 w-full flex items-center justify-center">${pintarPuntos(f[0])}</div>
-                <div class="w-full h-[2px] bg-slate-300 my-0.5"></div>
-                <div class="flex-1 w-full flex items-center justify-center">${pintarPuntos(f[1])}</div>
+                class="domino-tile domino-v w-[50px] h-[92px] ${!esTuTurno ? 'opacity-40 cursor-not-allowed' : (valida ? 'ring-2 ring-emerald-500/70 hover:scale-105' : 'opacity-70')}">
+                <div class="half">${pintarPuntos(f[0])}</div>
+                <div class="divider"></div>
+                <div class="half">${pintarPuntos(f[1])}</div>
             </button>
         `;
     }).join('');
 
-    // Acciones
     accionesEl.innerHTML = '';
     if (esTuTurno) {
         const tieneValidas = validasSet.size > 0;
@@ -271,7 +264,7 @@ function mostrarFinJugador(partida) {
     marcador.innerHTML = html;
 }
 
-// ============ ACCIONES DE JUEGO ============
+// ============ ACCIONES ============
 
 async function intentarJugarFicha(indexFicha, ficha) {
     const partida = window.estadoGlobal;
@@ -291,6 +284,8 @@ async function intentarJugarFicha(indexFicha, ficha) {
     const coincideDer = (ficha[0] === der || ficha[1] === der);
 
     if (!coincideIzq && !coincideDer) {
+        sonar('error');
+        vibrar(80);
         alert("Esta ficha no empareja con ningún extremo.");
         return;
     }
@@ -302,9 +297,11 @@ async function intentarJugarFicha(indexFicha, ficha) {
     } else if (coincideIzq) {
         colocarFicha(indexFicha, ficha, 'izq');
         sonar('colocar');
+        vibrar(30);
     } else {
         colocarFicha(indexFicha, ficha, 'der');
         sonar('colocar');
+        vibrar(30);
     }
 }
 
@@ -312,20 +309,18 @@ function ejecutarJugadaLado(lado) {
     document.getElementById('modal-lado').style.display = 'none';
     colocarFicha(window.fichaPendiente.index, window.fichaPendiente.valor, lado);
     sonar('colocar');
+    vibrar(30);
 }
 
 function cerrarModalLado() {
     document.getElementById('modal-lado').style.display = 'none';
 }
 
-// ============ COMPARTIR QRs (modo con mesa) ============
+// ============ QRs ============
 
 function mostrarQRCel() {
     const modal = document.getElementById('modal-qr-cel');
-    if (!modal) {
-        alert("Este modo no permite compartir QRs.");
-        return;
-    }
+    if (!modal) { alert("Este modo no permite compartir QRs."); return; }
     generarQRCel();
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -333,10 +328,7 @@ function mostrarQRCel() {
 
 function cerrarQRCel() {
     const modal = document.getElementById('modal-qr-cel');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-    }
+    if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
 }
 
 function generarQRCel() {
@@ -370,11 +362,7 @@ function generarQRCel() {
 
         if (!esYo) {
             const url = `${baseUrl}?sala=${salaId}&jugador=${i}&mesa=1`;
-            new QRCode(document.getElementById(`qr-cel-${i}`), {
-                text: url,
-                width: 90,
-                height: 90
-            });
+            new QRCode(document.getElementById(`qr-cel-${i}`), { text: url, width: 90, height: 90 });
         }
     }
 }

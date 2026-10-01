@@ -22,15 +22,9 @@ async function renderVistaMesa() {
                 </div>
                 <div class="flex items-center gap-2">
                     <div id="contadores-jugadores" class="flex gap-1.5 flex-wrap"></div>
-                    <button onclick="reiniciarPartida()" class="bg-amber-600 hover:bg-amber-500 text-xs font-bold py-2 px-3 rounded-xl transition shadow cursor-pointer" title="Reiniciar partida completa">
-                        🔄
-                    </button>
-                    <button onclick="toggleQRs()" class="bg-slate-600 hover:bg-slate-500 text-xs font-bold py-2 px-3 rounded-xl transition shadow cursor-pointer" title="Mostrar/ocultar QRs">
-                        📱
-                    </button>
-                    <div id="turno-info" class="text-xs md:text-sm bg-emerald-900/80 px-3 py-2 rounded-xl border border-emerald-500/50">
-                        Cargando...
-                    </div>
+                    <button onclick="reiniciarPartida()" class="bg-amber-600 hover:bg-amber-500 text-xs font-bold py-2 px-3 rounded-xl transition shadow cursor-pointer" title="Reiniciar">🔄</button>
+                    <button onclick="toggleQRs()" class="bg-slate-600 hover:bg-slate-500 text-xs font-bold py-2 px-3 rounded-xl transition shadow cursor-pointer" title="QRs">📱</button>
+                    <div id="turno-info" class="text-xs md:text-sm bg-emerald-900/80 px-3 py-2 rounded-xl border border-emerald-500/50">Cargando...</div>
                 </div>
             </div>
 
@@ -43,20 +37,20 @@ async function renderVistaMesa() {
                 </div>
             </div>
 
-                       <!-- Superficie de la mesa con perspectiva 3D -->
-            <div class="mesa-superficie tablero-central-container my-3">
+            <!-- Mesa con camino -->
+            <div class="mesa-superficie flex-1 my-3 flex items-center justify-center">
                 <div id="tablero-central" class="w-full flex items-center justify-center">
                     <span class="text-slate-300 italic">Esperando que los jugadores escaneen sus QRs...</span>
                 </div>
             </div>
 
             <div id="panel-qr" class="bg-black/50 backdrop-blur p-3 rounded-2xl border border-white/10">
-                <h3 class="text-xs md:text-sm font-semibold text-slate-300 mb-3 text-center">📱 Escanea con cada celular para unirte (verás la mesa + tu mano):</h3>
+                <h3 class="text-xs md:text-sm font-semibold text-slate-300 mb-3 text-center">📱 Escanea con cada celular para unirte:</h3>
                 <div id="qr-container" class="flex flex-wrap justify-center gap-4"></div>
             </div>
 
             <div id="panel-fin-ronda" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm items-center justify-center p-4 z-50">
-                <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
+                <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl modal-entra">
                     <h3 id="fin-titulo" class="text-2xl font-bold mb-4 text-emerald-400"></h3>
                     <div id="fin-detalle" class="text-sm text-slate-300 mb-6"></div>
                     <div id="fin-marcador" class="bg-slate-900 rounded-xl p-4 mb-4"></div>
@@ -71,7 +65,6 @@ async function renderVistaMesa() {
     const { data } = await supabaseClient.from('partidas').select('*').eq('sala_id', salaId).single();
     if (!data) { alert("Sala no encontrada"); return; }
 
-    // Generar QRs — apuntan a jugador.html con &mesa=1
     const baseUrl = window.location.origin + window.location.pathname.replace('mesa.html', '');
     const qrContainer = document.getElementById('qr-container');
     for (let i = 1; i <= data.num_jugadores; i++) {
@@ -141,23 +134,20 @@ function actualizarInterfazMesa(partida) {
         extremosInfo.innerHTML = `Mesa vacía · Pozo: ${(partida.pozo || []).length}`;
     }
 
-    // Renderizar tablero como mesa REAL (serpenteante con dobles perpendiculares)
     const tableroEl = document.getElementById('tablero-central');
     if (tableroEl) {
-        const fichaNueva = detectarFichaNueva(tablero, window.tableroAnterior);
-tableroEl.innerHTML = renderMesaReal(tablero, 'md', fichaNueva);
-window.tableroAnterior = JSON.parse(JSON.stringify(tablero));
+        tableroEl.innerHTML = renderMesaCamino(
+            partida.tablero_pos || [],
+            window.tableroPosAnterior,
+            -1
+        );
+        window.tableroPosAnterior = JSON.parse(JSON.stringify(partida.tablero_pos || []));
     }
 
-    // Ocultar QRs si todos los jugadores ya se unieron
     const panelQR = document.getElementById('panel-qr');
     if (panelQR) {
         const todosUnidos = Object.keys(partida.manos || {}).length >= partida.num_jugadores;
-        if (todosUnidos && partida.estado === 'jugando') {
-            panelQR.style.display = 'none';
-        } else {
-            panelQR.style.display = 'block';
-        }
+        panelQR.style.display = (todosUnidos && partida.estado === 'jugando') ? 'none' : 'block';
     }
 
     const panel = document.getElementById('panel-fin-ronda');

@@ -1,14 +1,16 @@
 // ============================================
-// LÓGICA DEL JUEGO (turnos, tranca, rondas)
+// LÓGICA DEL JUEGO v3 (tablero camino)
 // ============================================
 
-// Determina qué jugador debe salir en la primera ronda (el que tenga [6-6])
-function jugadorInicial(manos, numJugadores) {
+// Determina qué jugador sale (primera ronda = [6|6], después rota)
+function jugadorInicial(manos, numJugadores, numRonda = 1, ganadorAnterior = null) {
+    if (numRonda > 1 && ganadorAnterior) {
+        return ganadorAnterior;
+    }
     for (let i = 1; i <= numJugadores; i++) {
         const mano = manos[i] || [];
         if (mano.some(f => f[0] === 6 && f[1] === 6)) return i;
     }
-    // Si nadie tiene el doble seis, sale el que tenga la ficha más alta
     let mejorJugador = 1;
     let mejorPuntaje = -1;
     for (let i = 1; i <= numJugadores; i++) {
@@ -22,7 +24,7 @@ function jugadorInicial(manos, numJugadores) {
     return mejorJugador;
 }
 
-// Calcula el ganador de la ronda por tranca (menor puntaje)
+// Ganador por tranca (menor puntaje)
 function ganadorPorTranca(manos, numJugadores) {
     let menorPuntaje = Infinity;
     let ganador = null;
@@ -36,7 +38,25 @@ function ganadorPorTranca(manos, numJugadores) {
     return ganador;
 }
 
-// Aplica la lógica al colocar una ficha (con validación de tranca)
+// Calcula el índice de la celda donde va la nueva ficha
+// En función del lado elegido y de las posiciones actuales
+function calcularIndiceCelda(tableroPos, lado) {
+    if (!tableroPos || tableroPos.length === 0) {
+        return CELDA_CENTRO; // Primera ficha → centro
+    }
+
+    const indices = tableroPos.map(p => p.celda);
+    const minIdx = Math.min(...indices);
+    const maxIdx = Math.max(...indices);
+
+    if (lado === 'izq') {
+        return minIdx - 1;
+    } else {
+        return maxIdx + 1;
+    }
+}
+
+// Coloca una ficha
 async function colocarFicha(indexFicha, ficha, lado) {
     const { data: partida } = await supabaseClient
         .from('partidas')
@@ -48,12 +68,23 @@ async function colocarFicha(indexFicha, ficha, lado) {
 
     let manos = JSON.parse(JSON.stringify(partida.manos || {}));
     let tablero = partida.tablero || [];
+    let tableroPos = partida.tablero_pos || [];
     let fichaJugada = [...ficha];
 
     if (!manos[jugadorNum]) return;
     manos[jugadorNum].splice(indexFicha, 1);
 
-    // Colocar la ficha en el extremo correcto
+    // Calcular índice de celda
+    const indiceCelda = calcularIndiceCelda(tableroPos, lado);
+
+    // Validar que el índice esté dentro del camino
+    if (indiceCelda < 0 || indiceCelda >= CAMINO.length) {
+        console.error('Celda fuera del camino:', indiceCelda);
+        alert('No hay más espacio en el tablero por ese lado.');
+        return;
+    }
+
+    // Colocar en el tablero lógico (mantener orden visual)
     if (tablero.length === 0) {
         tablero.push(fichaJugada);
     } else {
@@ -70,6 +101,9 @@ async function colocarFicha(indexFicha, ficha, lado) {
             tablero.push(fichaJugada);
         }
     }
+
+    // Añadir la posición al array de posiciones
+    tableroPos.push({ celda: indiceCelda, ficha: fichaJugada });
 
     // ¿El jugador se quedó sin fichas? → Gana la ronda
     let estado = partida.estado;
@@ -94,6 +128,7 @@ async function colocarFicha(indexFicha, ficha, lado) {
         .update({
             manos,
             tablero,
+            tablero_pos: tableroPos,
             turno: siguienteTurno,
             estado,
             pases_seguidos: 0,
@@ -117,13 +152,21 @@ async function colocarFicha(indexFicha, ficha, lado) {
     }
 }
 
-// Robar del pozo
+// Robar del pozo (solo si no hay jugadas válidas)
 async function robarDelPozo() {
     const { data: partida } = await supabaseClient
         .from('partidas').select('*').eq('sala_id', salaId).single();
     if (!partida || partida.turno != jugadorNum) return;
     if (!partida.pozo || partida.pozo.length === 0) {
         alert("El pozo está vacío.");
+        return;
+    }
+
+    // Validar que el jugador realmente no pueda jugar
+    const misFichas = partida.manos?.[jugadorNum] || [];
+    const validas = fichasValidas(misFichas, partida.tablero || []);
+    if (validas.length > 0) {
+        alert("Tienes fichas válidas. Debes jugar o pasar.");
         return;
     }
 
@@ -144,9 +187,10 @@ async function robarDelPozo() {
         .eq('sala_id', salaId);
 
     sonar('robar');
+    vibrar(20);
 }
 
-// Pasar turno (cuando no hay jugadas ni pozo)
+// Pasar turno
 async function pasarTurno() {
     const { data: partida } = await supabaseClient
         .from('partidas').select('*').eq('sala_id', salaId).single();
@@ -180,6 +224,8 @@ async function pasarTurno() {
             })
             .eq('sala_id', salaId);
 
+        sonar('tranca');
+
         const alcanzo = Object.entries(nuevasPuntos).some(([j, p]) => p >= partida.objetivo_puntos);
         if (alcanzo) {
             const ganadorPartida = Object.entries(nuevasPuntos)
@@ -203,7 +249,7 @@ async function pasarTurno() {
         .eq('sala_id', salaId);
 }
 
-// Inicia una nueva ronda conservando puntos acumulados
+// Inicia nueva ronda
 async function iniciarNuevaRonda() {
     const { data: partida } = await supabaseClient
         .from('partidas').select('*').eq('sala_id', salaId).single();
@@ -214,12 +260,14 @@ async function iniciarNuevaRonda() {
     for (let i = 1; i <= partida.num_jugadores; i++) {
         nuevasManos[i] = nuevoPozo.splice(0, 7);
     }
-    const primerTurno = jugadorInicial(nuevasManos, partida.num_jugadores);
+    const ganadorAnterior = partida.ganador_ronda;
+    const primerTurno = jugadorInicial(nuevasManos, partida.num_jugadores, (partida.num_ronda || 1) + 1, ganadorAnterior);
 
     await supabaseClient
         .from('partidas')
         .update({
             tablero: [],
+            tablero_pos: [],
             pozo: nuevoPozo,
             manos: nuevasManos,
             turno: primerTurno,
@@ -232,7 +280,7 @@ async function iniciarNuevaRonda() {
         .eq('sala_id', salaId);
 }
 
-// Reinicia la partida completa (borra puntos)
+// Reinicia partida
 async function reiniciarPartida() {
     if (!confirm("¿Reiniciar TODA la partida y borrar puntos acumulados?")) return;
 
@@ -247,12 +295,13 @@ async function reiniciarPartida() {
         nuevasManos[i] = nuevoPozo.splice(0, 7);
         nuevosPuntos[i] = 0;
     }
-    const primerTurno = jugadorInicial(nuevasManos, partida.num_jugadores);
+    const primerTurno = jugadorInicial(nuevasManos, partida.num_jugadores, 1);
 
     await supabaseClient
         .from('partidas')
         .update({
             tablero: [],
+            tablero_pos: [],
             pozo: nuevoPozo,
             manos: nuevasManos,
             turno: primerTurno,
@@ -267,7 +316,7 @@ async function reiniciarPartida() {
         .eq('sala_id', salaId);
 }
 
-// Guardar nombre del jugador
+// Guardar nombre
 async function guardarNombre(nombre) {
     const { data: partida } = await supabaseClient
         .from('partidas').select('nombres').eq('sala_id', salaId).single();
@@ -279,7 +328,7 @@ async function guardarNombre(nombre) {
         .eq('sala_id', salaId);
 }
 
-// Reparto inicial (solo si el jugador no tiene mano)
+// Reparto inicial
 async function asegurarReparto(numJugador) {
     const { data: partida } = await supabaseClient
         .from('partidas').select('*').eq('sala_id', salaId).single();
@@ -299,7 +348,7 @@ async function asegurarReparto(numJugador) {
         }
 
         if (pozo.length < 7) {
-            console.warn('⚠️ Pozo insuficiente para repartir 7 fichas');
+            console.warn('⚠️ Pozo insuficiente');
         }
         manos[numJugador] = pozo.splice(0, 7);
 
