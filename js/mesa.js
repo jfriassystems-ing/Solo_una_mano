@@ -43,9 +43,11 @@ async function renderVistaMesa() {
                 </div>
             </div>
 
-            <!-- Superficie de la mesa (con textura tipo fieltro) -->
-            <div id="tablero-central" class="mesa-superficie flex-1 my-2 overflow-auto min-h-[220px] flex items-center justify-center">
-                <span class="text-slate-300 italic">Esperando que los jugadores escaneen sus QRs...</span>
+                       <!-- Superficie de la mesa con perspectiva 3D -->
+            <div class="mesa-superficie tablero-central-container my-3">
+                <div id="tablero-central" class="w-full flex items-center justify-center">
+                    <span class="text-slate-300 italic">Esperando que los jugadores escaneen sus QRs...</span>
+                </div>
             </div>
 
             <div id="panel-qr" class="bg-black/50 backdrop-blur p-3 rounded-2xl border border-white/10">

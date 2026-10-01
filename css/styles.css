@@ -1,18 +1,21 @@
 /* ============================================
-   DOMINO LINK - Estilos v2
+   DOMINO LINK - Estilos v3 (mesa 3D real)
    ============================================ */
 
 :root {
     --mesa-bg-1: #1b4d3e;
     --mesa-bg-2: #236351;
-    --mesa-sup-1: #14503e;
-    --mesa-sup-2: #0f3d2e;
+    --mesa-sup-1: #1a5c47;
+    --mesa-sup-2: #0d3527;
+    --mesa-borde-claro: #2d7a5f;
+    --mesa-borde-oscuro: #072218;
     --ficha-bg-1: #ffffff;
     --ficha-bg-2: #e8edf2;
     --ficha-borde: #94a3b8;
     --pip-color-1: #475569;
     --pip-color-2: #0f172a;
     --acento: #10b981;
+    --sombra-ficha: rgba(0, 0, 0, 0.55);
 }
 
 /* ============================================
@@ -21,8 +24,10 @@
 body[data-tema="nocturno"] {
     --mesa-bg-1: #0f172a;
     --mesa-bg-2: #1e293b;
-    --mesa-sup-1: #0b1220;
+    --mesa-sup-1: #14213b;
     --mesa-sup-2: #060b14;
+    --mesa-borde-claro: #334155;
+    --mesa-borde-oscuro: #000000;
     --ficha-bg-1: #1f2937;
     --ficha-bg-2: #111827;
     --ficha-borde: #fbbf24;
@@ -33,8 +38,10 @@ body[data-tema="nocturno"] {
 body[data-tema="madera"] {
     --mesa-bg-1: #78350f;
     --mesa-bg-2: #92400e;
-    --mesa-sup-1: #5b2a08;
+    --mesa-sup-1: #6b2f0a;
     --mesa-sup-2: #3d1c05;
+    --mesa-borde-claro: #b45309;
+    --mesa-borde-oscuro: #1c0a02;
     --ficha-bg-1: #fef3c7;
     --ficha-bg-2: #fde68a;
     --ficha-borde: #78350f;
@@ -45,8 +52,10 @@ body[data-tema="madera"] {
 body[data-tema="moderno"] {
     --mesa-bg-1: #312e81;
     --mesa-bg-2: #4338ca;
-    --mesa-sup-1: #1e1b4b;
-    --mesa-sup-2: #0f0d2e;
+    --mesa-sup-1: #3730a3;
+    --mesa-sup-2: #1e1b4b;
+    --mesa-borde-claro: #6366f1;
+    --mesa-borde-oscuro: #0f0d2e;
     --ficha-bg-1: #f5f3ff;
     --ficha-bg-2: #ede9fe;
     --ficha-borde: #a78bfa;
@@ -56,63 +65,169 @@ body[data-tema="moderno"] {
 }
 
 /* ============================================
-   MESA / MADERA
+   FONDO GENERAL
    ============================================ */
 .wood-table {
     background-color: var(--mesa-bg-1);
-    background-image: radial-gradient(circle at 50% 30%, var(--mesa-bg-2) 0%, var(--mesa-bg-1) 70%);
+    background-image:
+        radial-gradient(ellipse at 50% 0%, var(--mesa-bg-2) 0%, var(--mesa-bg-1) 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.5) 0%, transparent 70%);
     transition: background 0.4s ease;
+    perspective: 1400px;
+    perspective-origin: 50% 30%;
 }
 
+/* ============================================
+   MESA CON PERSPECTIVA 3D
+   ============================================ */
 .mesa-superficie {
     position: relative;
     background-color: var(--mesa-sup-1);
     background-image:
-        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.04) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(0,0,0,0.15) 0%, transparent 40%),
-        linear-gradient(135deg, rgba(0,0,0,0.15) 25%, transparent 25%),
-        linear-gradient(225deg, rgba(0,0,0,0.15) 25%, transparent 25%),
-        linear-gradient(315deg, rgba(0,0,0,0.15) 25%, transparent 25%),
-        linear-gradient(45deg, rgba(0,0,0,0.15) 25%, transparent 25%);
-    background-size: 100% 100%, 100% 100%, 20px 20px, 20px 20px, 20px 20px, 20px 20px;
-    border: 3px solid rgba(16, 185, 129, 0.35);
-    border-radius: 14px;
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.4) 0%, transparent 60%),
+        repeating-linear-gradient(
+            90deg,
+            rgba(255,255,255,0.02) 0px,
+            rgba(255,255,255,0.02) 1px,
+            transparent 1px,
+            transparent 3px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            rgba(0,0,0,0.04) 0px,
+            rgba(0,0,0,0.04) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+
+    /* Borde "marco" de la mesa */
+    border: 6px solid;
+    border-image: linear-gradient(
+        180deg,
+        var(--mesa-borde-claro) 0%,
+        var(--mesa-borde-oscuro) 100%
+    ) 1;
+
+    border-radius: 10px 10px 16px 16px;
+
+    /* Sombras internas y externas (profundidad) */
     box-shadow:
-        inset 0 0 80px rgba(0,0,0,0.7),
-        inset 0 2px 6px rgba(255,255,255,0.12),
-        inset 0 -4px 12px rgba(0,0,0,0.4),
-        0 8px 24px rgba(0,0,0,0.5);
-    padding: 18px;
+        inset 0 30px 60px rgba(0, 0, 0, 0.45),
+        inset 0 -20px 40px rgba(0, 0, 0, 0.6),
+        inset 0 2px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+        0 25px 50px -10px rgba(0, 0, 0, 0.75),
+        0 10px 20px rgba(0, 0, 0, 0.4);
+
+    padding: 20px;
+
+    /* ✨ PERSPECTIVA: sensación de estar sentado frente a la mesa */
+    transform: perspective(1200px) rotateX(22deg);
+    transform-origin: 50% 100%;
+    transform-style: preserve-3d;
+
     transition: all 0.4s ease;
 }
 
+/* Efecto de "borde frontal" de la mesa (como si fuera madera 3D) */
+.mesa-superficie::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    right: -6px;
+    bottom: -18px;
+    height: 18px;
+    background: linear-gradient(
+        180deg,
+        var(--mesa-borde-oscuro) 0%,
+        #000 100%
+    );
+    border-radius: 0 0 8px 8px;
+    transform: rotateX(-22deg);
+    transform-origin: 50% 0%;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+    pointer-events: none;
+}
+
+/* Reflejo superior de luz */
+.mesa-superficie::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 40%;
+    background: radial-gradient(
+        ellipse at 50% 0%,
+        rgba(255,255,255,0.18) 0%,
+        transparent 70%
+    );
+    border-radius: 10px 10px 0 0;
+    pointer-events: none;
+}
+
 /* ============================================
-   FICHAS
+   MESA EN CELULAR - perspectiva más suave
+   ============================================ */
+@media (max-width: 640px) {
+    .mesa-superficie {
+        transform: perspective(900px) rotateX(14deg);
+        padding: 12px;
+        border-width: 4px;
+    }
+    .mesa-superficie::before {
+        bottom: -12px;
+        height: 12px;
+        left: -4px;
+        right: -4px;
+        transform: rotateX(-14deg);
+    }
+}
+
+/* ============================================
+   FICHAS 3D
    ============================================ */
 .domino-tile {
     position: relative;
-    background: linear-gradient(150deg, var(--ficha-bg-1) 0%, var(--ficha-bg-2) 100%);
+    background:
+        linear-gradient(150deg, var(--ficha-bg-1) 0%, var(--ficha-bg-2) 55%, var(--ficha-bg-2) 100%);
     border: 2px solid var(--ficha-borde);
     border-radius: 8px;
     box-shadow:
-        0 3px 6px rgba(0, 0, 0, 0.4),
-        0 1px 2px rgba(0, 0, 0, 0.3),
-        inset 0 2px 0 rgba(255, 255, 255, 0.7),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.15),
-        inset 2px 0 3px rgba(255, 255, 255, 0.3),
-        inset -2px 0 3px rgba(0, 0, 0, 0.08);
+        /* Sombra proyectada (lejos, hacia abajo-derecha) */
+        4px 8px 12px -2px var(--sombra-ficha),
+        /* Sombra media */
+        2px 4px 6px rgba(0, 0, 0, 0.35),
+        /* Brillo superior (marfil) */
+        inset 0 2px 0 rgba(255, 255, 255, 0.85),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.18),
+        inset 2px 0 3px rgba(255, 255, 255, 0.35),
+        inset -2px 0 3px rgba(0, 0, 0, 0.1);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
+
+/* Canto superior brillante */
 .domino-tile::after {
     content: '';
     position: absolute;
     inset: 1px;
     border-radius: 6px;
     pointer-events: none;
-    background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 40%);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.45) 0%, transparent 35%),
+        linear-gradient(0deg, rgba(0,0,0,0.15) 0%, transparent 25%);
     mix-blend-mode: overlay;
 }
-.domino-tile:active { transform: scale(0.94); }
+
+.domino-tile:active {
+    transform: scale(0.94) translateY(2px);
+    box-shadow:
+        2px 4px 6px -1px var(--sombra-ficha),
+        1px 2px 3px rgba(0, 0, 0, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
 
 .domino-h {
     display: flex;
@@ -173,24 +288,29 @@ body[data-tema="moderno"] {
    ============================================ */
 .board-scroll {
     scrollbar-width: thin;
-    scrollbar-color: var(--acento) #1e293b;
+    scrollbar-color: var(--acento) transparent;
 }
-.board-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
-.board-scroll::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+.board-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+.board-scroll::-webkit-scrollbar-track { background: transparent; }
 .board-scroll::-webkit-scrollbar-thumb { background: var(--acento); border-radius: 4px; }
 
 /* ============================================
-   MESA REAL (serpenteante)
+   MESA REAL (serpenteante) con fichas PARADAS
    ============================================ */
 .mesa-real {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 8px;
+    gap: 4px;
+    padding: 10px;
     width: 100%;
     max-width: 100%;
+
+    /* Las fichas del tablero se "levantan" contra la perspectiva */
+    transform: rotateX(-14deg);
+    transform-origin: 50% 100%;
+    transform-style: preserve-3d;
 }
 
 .mesa-real .ficha-tile {
@@ -199,19 +319,46 @@ body[data-tema="moderno"] {
     align-items: center;
     justify-content: center;
     position: relative;
+
+    /* Contra-rotación: las fichas se ven PARADAS sobre la mesa inclinada */
+    transform: rotateX(-8deg);
+    transform-origin: 50% 100%;
+    transition: transform 0.2s ease;
 }
 
-/* Sombra proyectada sobre la mesa */
-.mesa-real .ficha-tile::before {
+/* Sombra real proyectada de la ficha sobre la mesa */
+.mesa-real .ficha-tile::after {
     content: '';
     position: absolute;
-    bottom: -4px;
-    left: 10%;
-    right: 10%;
-    height: 6px;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0.5), transparent 70%);
+    bottom: -6px;
+    left: 15%;
+    right: 15%;
+    height: 8px;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(0,0,0,0.6) 0%,
+        rgba(0,0,0,0.3) 40%,
+        transparent 75%
+    );
     border-radius: 50%;
     z-index: -1;
+    filter: blur(1.5px);
+}
+
+/* En celular, contra-rotación más suave */
+@media (max-width: 640px) {
+    .mesa-real {
+        transform: rotateX(-8deg);
+        gap: 2px;
+        padding: 6px;
+    }
+    .mesa-real .ficha-tile {
+        transform: rotateX(-4deg);
+    }
+    .mesa-real .ficha-tile::after {
+        bottom: -4px;
+        height: 5px;
+    }
 }
 
 /* ============================================
@@ -224,7 +371,6 @@ body[data-tema="moderno"] {
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-/* Solo las fichas NUEVAS del tablero animan */
 .ficha-tile.nueva .domino-tile {
     animation: ficha-entra 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -239,8 +385,8 @@ body[data-tema="moderno"] {
 }
 
 @keyframes brillo-ficha {
-    0%, 100% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.4), 0 3px 6px rgba(0,0,0,0.4); }
-    50%      { box-shadow: 0 0 22px rgba(16, 185, 129, 0.9), 0 3px 6px rgba(0,0,0,0.4); }
+    0%, 100% { box-shadow: 4px 8px 12px -2px rgba(0,0,0,0.55), 0 0 12px rgba(16, 185, 129, 0.4); }
+    50%      { box-shadow: 4px 8px 12px -2px rgba(0,0,0,0.55), 0 0 22px rgba(16, 185, 129, 0.9); }
 }
 .ficha-jugable {
     animation: brillo-ficha 2s infinite;
@@ -265,20 +411,56 @@ body[data-tema="moderno"] {
    MÓVIL
    ============================================ */
 @media (max-width: 640px) {
-    .mesa-real { gap: 2px; padding: 4px; }
-    .mesa-superficie { padding: 10px; }
     button { touch-action: manipulation; }
     html, body { overscroll-behavior: none; }
     .domino-tile { -webkit-tap-highlight-color: transparent; }
 }
 
-/* Evitar selección accidental en móvil */
 * {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
 }
 input, textarea, select { -webkit-user-select: text; user-select: text; }
+
+/* ============================================
+   CONTENEDOR DE TABLERO MINI (celular con mesa)
+   ============================================ */
+.tablero-mini-container {
+    min-height: 160px;
+    max-height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    perspective: 800px;
+    perspective-origin: 50% 20%;
+    border-radius: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--acento) transparent;
+}
+.tablero-mini-container::-webkit-scrollbar { width: 5px; }
+.tablero-mini-container::-webkit-scrollbar-track { background: transparent; }
+.tablero-mini-container::-webkit-scrollbar-thumb {
+    background: var(--acento);
+    border-radius: 4px;
+}
+
+/* ============================================
+   CONTENEDOR DE TABLERO CENTRAL (iPad)
+   ============================================ */
+.tablero-central-container {
+    min-height: 240px;
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1400px;
+    perspective-origin: 50% 20%;
+}
 
 /* ============================================
    SELECTOR DE TEMA

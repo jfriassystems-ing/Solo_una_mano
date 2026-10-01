@@ -29,11 +29,13 @@ async function renderVistaJugador() {
                 ` : ''}
             </div>
 
-            <!-- Panel de mesa con estilo real (fieltro verde) -->
+                       <!-- Panel de mesa con perspectiva 3D -->
             <div id="panel-mesa" class="${conMesa ? '' : 'hidden'} mb-3">
                 <div class="text-[10px] text-slate-400 mb-1 text-center uppercase tracking-wider">Mesa</div>
-                <div id="tablero-mini" class="mesa-superficie min-h-[100px] overflow-auto flex items-center justify-center">
-                    <span class="text-slate-300 text-xs italic">Esperando...</span>
+                <div class="mesa-superficie tablero-mini-container">
+                    <div id="tablero-mini" class="w-full flex items-center justify-center">
+                        <span class="text-slate-300 text-xs italic">Esperando...</span>
+                    </div>
                 </div>
             </div>
 
