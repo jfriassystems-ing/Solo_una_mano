@@ -1,5 +1,5 @@
 // ============================================
-// CONFIGURACIÓN GLOBAL
+// CONFIGURACIÓN GLOBAL v2
 // ============================================
 
 const SUPABASE_URL = 'https://drbvvooxdopszhbagvsd.supabase.co';
@@ -36,3 +36,34 @@ const conMesa = urlParams.get('mesa') === '1';
 // Estado global compartido
 window.estadoGlobal = null;
 window.fichaPendiente = { index: null, valor: null };
+window.tableroAnterior = null; // Para detectar fichas nuevas
+
+// ============================================
+// GESTIÓN DE TEMA
+// ============================================
+const TEMAS = ['clasico', 'nocturno', 'madera', 'moderno'];
+
+function aplicarTema(tema) {
+    if (!TEMAS.includes(tema)) tema = 'clasico';
+    document.body.setAttribute('data-tema', tema);
+    localStorage.setItem('domino-tema', tema);
+    // Marcar botón activo si existe
+    document.querySelectorAll('.tema-btn').forEach(btn => {
+        btn.classList.toggle('activo', btn.dataset.tema === tema);
+    });
+}
+
+function cambiarTema(tema) {
+    aplicarTema(tema);
+}
+
+// Aplicar al cargar
+(function initTema() {
+    const guardado = localStorage.getItem('domino-tema') || 'clasico';
+    // Esperar a que el body exista
+    if (document.body) {
+        aplicarTema(guardado);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => aplicarTema(guardado));
+    }
+})();

@@ -88,6 +88,7 @@ async function renderVistaMesa() {
     document.getElementById('objetivo-txt').innerText = data.objetivo_puntos || 100;
     actualizarInterfazMesa(data);
     suscripcionMesa();
+    activarWakeLock();
 }
 
 function actualizarInterfazMesa(partida) {
@@ -141,7 +142,9 @@ function actualizarInterfazMesa(partida) {
     // Renderizar tablero como mesa REAL (serpenteante con dobles perpendiculares)
     const tableroEl = document.getElementById('tablero-central');
     if (tableroEl) {
-        tableroEl.innerHTML = renderMesaReal(tablero, 'md');
+        const fichaNueva = detectarFichaNueva(tablero, window.tableroAnterior);
+tableroEl.innerHTML = renderMesaReal(tablero, 'md', fichaNueva);
+window.tableroAnterior = JSON.parse(JSON.stringify(tablero));
     }
 
     // Ocultar QRs si todos los jugadores ya se unieron

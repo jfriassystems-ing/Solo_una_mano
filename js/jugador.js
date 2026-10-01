@@ -99,6 +99,7 @@ async function renderVistaJugador() {
             actualizarInterfazJugador(payload.new);
         })
         .subscribe();
+        activarWakeLock();
 }
 
 async function editarNombre() {
@@ -178,7 +179,9 @@ function actualizarInterfazJugador(partida) {
     // Mini tablero con renderMesaReal (mesa serpenteante con dobles perpendiculares)
     const tableroMini = document.getElementById('tablero-mini');
     if (tableroMini && conMesa) {
-        tableroMini.innerHTML = renderMesaReal(tablero, 'sm');
+        const fichaNueva = detectarFichaNueva(tablero, window.tableroAnterior);
+tableroMini.innerHTML = renderMesaReal(tablero, 'sm', fichaNueva);
+window.tableroAnterior = JSON.parse(JSON.stringify(tablero));
     }
 
     // Mano propia
@@ -276,6 +279,7 @@ async function intentarJugarFicha(indexFicha, ficha) {
     if (tablero.length === 0) {
         colocarFicha(indexFicha, ficha, 'der');
         sonar('colocar');
+        vibrar(30);
         return;
     }
 

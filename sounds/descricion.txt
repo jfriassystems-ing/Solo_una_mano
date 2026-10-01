@@ -1,0 +1,9 @@
+Cómo grabar cada sonido
+Sonido	                    Cómo grabarlo en casa
+colocar	                    Golpea suavemente una ficha de dominó real (o un pedazo de madera/plástico) sobre una mesa de madera. Graba a 10-15 cm del celular.
+robar	                    Desliza una ficha sobre la mesa lentamente. Captura el "shhh" del roce.
+turno	                    Golpea suavemente un vaso con una cuchara (1 solo toque).
+ganar	                    Silba 3 notas ascendentes o usa un timbre/campana.
+tranca	                    Golpe seco con el puño cerrado sobre la mesa.
+error	                    Di "mmm-mmm" con tono grave o golpea 2 veces la mesa.
+actualizar	                Chasquido de dedos suave o "tic" con la uña.

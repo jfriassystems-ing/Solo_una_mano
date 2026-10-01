@@ -1,5 +1,5 @@
 // ============================================
-// UTILIDADES GENERALES
+// UTILIDADES GENERALES v2
 // ============================================
 
 // Genera las 28 fichas del dominó estándar (doble-6), mezcladas
@@ -84,31 +84,69 @@ function fichasValidas(mano, tablero) {
         .filter(i => i !== -1);
 }
 
-// Reproduce un sonido (los archivos deben existir en /sounds/)
-function sonar(nombre) {
-    try {
-        const audio = new Audio(`sounds/${nombre}.mp3`);
-        audio.volume = 0.4;
-        audio.play().catch(() => {});
-    } catch (e) {}
-}
-
 // Genera un ID de sala aleatorio
 function nuevoSalaId() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
+
+// ============================================
+// SONIDOS con Howler.js
+// ============================================
+let sonidosCargados = false;
+const sonidos = {};
+
+function inicializarSonidos() {
+    if (sonidosCargados || typeof Howl === 'undefined') return;
+    ['colocar','robar','turno','ganar','tranca','error','actualizar'].forEach(n => {
+        sonidos[n] = new Howl({
+            src: [`sounds/${n}.mp3`],
+            volume: 0.5,
+            preload: true,
+            onloaderror: () => console.warn(`⚠️ No se pudo cargar sounds/${n}.mp3`)
+        });
+    });
+    sonidosCargados = true;
+}
+
+function sonar(nombre) {
+    try {
+        if (!sonidosCargados) inicializarSonidos();
+        if (sonidos[nombre]) sonidos[nombre].play();
+    } catch (e) {
+        // Fallback silencioso
+    }
+}
+
+// ============================================
+// VIBRACIÓN MÓVIL
+// ============================================
+function vibrar(ms = 30) {
+    if (navigator.vibrate) navigator.vibrate(ms);
+}
+
+// ============================================
+// WAKE LOCK (evitar que se apague la pantalla)
+// ============================================
+let wakeLock = null;
+async function activarWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+        }
+    } catch (e) {
+        console.warn('Wake Lock no disponible:', e);
+    }
+}
+document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        activarWakeLock();
+    }
+});
+
 // ============================================
 // RENDERIZADO DE MESA REAL (serpenteante)
 // ============================================
-
-/**
- * Renderiza el tablero de dominó como una mesa real:
- * - La primera ficha va vertical
- * - Los dobles van perpendiculares (verticales en flujo horizontal)
- * - Las fichas normales van horizontales conectando extremos
- * - Se envuelve (flex-wrap) simulando que la mesa dobla
- */
-function renderMesaReal(tablero, tamaño = 'sm') {
+function renderMesaReal(tablero, tamaño = 'sm', ultimaFicha = -1) {
     if (!tablero || tablero.length === 0) {
         return `<div class="text-slate-300 italic text-center py-4 w-full">Mesa limpia. ¡Comienza la partida!</div>`;
     }
@@ -118,6 +156,7 @@ function renderMesaReal(tablero, tamaño = 'sm') {
     tablero.forEach((f, idx) => {
         const esDoble = f[0] === f[1];
         const esPrimera = idx === 0;
+        const esNueva = (ultimaFicha === idx);
 
         let orientacion;
         if (esPrimera || esDoble) {
@@ -126,9 +165,26 @@ function renderMesaReal(tablero, tamaño = 'sm') {
             orientacion = 'h';
         }
 
-        html += `<div class="ficha-tile">${fichaHTML(f, orientacion, tamaño)}</div>`;
+        html += `<div class="ficha-tile ${esNueva ? 'nueva' : ''}">${fichaHTML(f, orientacion, tamaño)}</div>`;
     });
 
     html += '</div>';
     return html;
+}
+
+// Detecta cuál ficha se acaba de agregar comparando tableros
+function detectarFichaNueva(tableroNuevo, tableroViejo) {
+    if (!tableroViejo || tableroNuevo.length > tableroViejo.length) {
+        // Si creció, la nueva está al principio o al final
+        if (tableroNuevo.length === 0) return -1;
+        // Comparar extremos
+        const izqViejo = tableroViejo?.[0];
+        const derViejo = tableroViejo?.[tableroViejo.length - 1];
+        const izqNuevo = tableroNuevo[0];
+        const derNuevo = tableroNuevo[tableroNuevo.length - 1];
+
+        if (JSON.stringify(izqNuevo) !== JSON.stringify(izqViejo)) return 0;
+        if (JSON.stringify(derNuevo) !== JSON.stringify(derViejo)) return tableroNuevo.length - 1;
+    }
+    return -1;
 }

@@ -10,9 +10,15 @@
 <body class="bg-slate-900 text-white font-sans min-h-screen flex items-center justify-center p-4">
 
     <div id="app" class="w-full max-w-lg mx-auto">
-        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 text-center">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 text-center modal-entra">
             <h1 class="text-3xl font-bold mb-2 text-emerald-400">Domino Link 🁣🁤</h1>
-            <p class="text-slate-400 mb-6">Juega en red desde varios dispositivos.</p>
+            <p class="text-slate-400 mb-4">Juega en red desde varios dispositivos.</p>
+
+            <!-- Selector de tema -->
+            <div class="mb-6">
+                <div class="text-xs text-slate-400 mb-2 uppercase tracking-wider">Tema visual</div>
+                <div id="tema-selector"></div>
+            </div>
 
             <div class="mb-6 text-left">
                 <label class="block text-sm font-medium text-slate-300 mb-2">Cantidad de Jugadores:</label>
@@ -53,7 +59,7 @@
                 </div>
             </div>
 
-            <button onclick="crearPartida()" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-3 px-6 rounded-xl transition shadow-lg text-lg">
+            <button onclick="crearPartida(event)" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-3 px-6 rounded-xl transition shadow-lg text-lg">
                 Crear Partida
             </button>
 
@@ -64,10 +70,17 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/temas.js"></script>
     <script>
-        async function crearPartida() {
+        // Renderizar selector de temas al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            renderSelectorTemas('tema-selector');
+        });
+
+        async function crearPartida(event) {
             const btn = event.target;
             btn.disabled = true;
             btn.innerText = 'Creando...';

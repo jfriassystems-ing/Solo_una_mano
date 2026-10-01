@@ -1,41 +1,118 @@
 /* ============================================
-   DOMINO LINK - Estilos
+   DOMINO LINK - Estilos v2
    ============================================ */
 
+:root {
+    --mesa-bg-1: #1b4d3e;
+    --mesa-bg-2: #236351;
+    --mesa-sup-1: #14503e;
+    --mesa-sup-2: #0f3d2e;
+    --ficha-bg-1: #ffffff;
+    --ficha-bg-2: #e8edf2;
+    --ficha-borde: #94a3b8;
+    --pip-color-1: #475569;
+    --pip-color-2: #0f172a;
+    --acento: #10b981;
+}
+
+/* ============================================
+   TEMAS
+   ============================================ */
+body[data-tema="nocturno"] {
+    --mesa-bg-1: #0f172a;
+    --mesa-bg-2: #1e293b;
+    --mesa-sup-1: #0b1220;
+    --mesa-sup-2: #060b14;
+    --ficha-bg-1: #1f2937;
+    --ficha-bg-2: #111827;
+    --ficha-borde: #fbbf24;
+    --pip-color-1: #fde68a;
+    --pip-color-2: #f59e0b;
+    --acento: #fbbf24;
+}
+body[data-tema="madera"] {
+    --mesa-bg-1: #78350f;
+    --mesa-bg-2: #92400e;
+    --mesa-sup-1: #5b2a08;
+    --mesa-sup-2: #3d1c05;
+    --ficha-bg-1: #fef3c7;
+    --ficha-bg-2: #fde68a;
+    --ficha-borde: #78350f;
+    --pip-color-1: #78350f;
+    --pip-color-2: #451a03;
+    --acento: #f59e0b;
+}
+body[data-tema="moderno"] {
+    --mesa-bg-1: #312e81;
+    --mesa-bg-2: #4338ca;
+    --mesa-sup-1: #1e1b4b;
+    --mesa-sup-2: #0f0d2e;
+    --ficha-bg-1: #f5f3ff;
+    --ficha-bg-2: #ede9fe;
+    --ficha-borde: #a78bfa;
+    --pip-color-1: #7c3aed;
+    --pip-color-2: #4c1d95;
+    --acento: #a78bfa;
+}
+
+/* ============================================
+   MESA / MADERA
+   ============================================ */
 .wood-table {
-    background-color: #1b4d3e;
-    background-image: radial-gradient(circle, #236351 0%, #1b4d3e 100%);
+    background-color: var(--mesa-bg-1);
+    background-image: radial-gradient(circle at 50% 30%, var(--mesa-bg-2) 0%, var(--mesa-bg-1) 70%);
+    transition: background 0.4s ease;
 }
 
-/* Superficie de la mesa con textura tipo fieltro/madera */
 .mesa-superficie {
-    background-color: #14503e;
+    position: relative;
+    background-color: var(--mesa-sup-1);
     background-image:
-        linear-gradient(135deg, rgba(0,0,0,0.12) 25%, transparent 25%),
-        linear-gradient(225deg, rgba(0,0,0,0.12) 25%, transparent 25%),
-        linear-gradient(315deg, rgba(0,0,0,0.12) 25%, transparent 25%),
-        linear-gradient(45deg, rgba(0,0,0,0.12) 25%, transparent 25%);
-    background-size: 20px 20px;
-    border: 2px solid rgba(16, 185, 129, 0.3);
-    border-radius: 12px;
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.04) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(0,0,0,0.15) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(0,0,0,0.15) 25%, transparent 25%),
+        linear-gradient(225deg, rgba(0,0,0,0.15) 25%, transparent 25%),
+        linear-gradient(315deg, rgba(0,0,0,0.15) 25%, transparent 25%),
+        linear-gradient(45deg, rgba(0,0,0,0.15) 25%, transparent 25%);
+    background-size: 100% 100%, 100% 100%, 20px 20px, 20px 20px, 20px 20px, 20px 20px;
+    border: 3px solid rgba(16, 185, 129, 0.35);
+    border-radius: 14px;
     box-shadow:
-        inset 0 0 60px rgba(0,0,0,0.6),
-        inset 0 2px 4px rgba(255,255,255,0.1),
-        0 4px 12px rgba(0,0,0,0.4);
-    padding: 16px;
+        inset 0 0 80px rgba(0,0,0,0.7),
+        inset 0 2px 6px rgba(255,255,255,0.12),
+        inset 0 -4px 12px rgba(0,0,0,0.4),
+        0 8px 24px rgba(0,0,0,0.5);
+    padding: 18px;
+    transition: all 0.4s ease;
 }
 
+/* ============================================
+   FICHAS
+   ============================================ */
 .domino-tile {
-    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
-    border: 2px solid #94a3b8;
-    border-radius: 6px;
+    position: relative;
+    background: linear-gradient(150deg, var(--ficha-bg-1) 0%, var(--ficha-bg-2) 100%);
+    border: 2px solid var(--ficha-borde);
+    border-radius: 8px;
     box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
-    transition: transform 0.15s, box-shadow 0.15s;
+        0 3px 6px rgba(0, 0, 0, 0.4),
+        0 1px 2px rgba(0, 0, 0, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+        inset 2px 0 3px rgba(255, 255, 255, 0.3),
+        inset -2px 0 3px rgba(0, 0, 0, 0.08);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.domino-tile:active { transform: scale(0.95); }
+.domino-tile::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 6px;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 40%);
+    mix-blend-mode: overlay;
+}
+.domino-tile:active { transform: scale(0.94); }
 
 .domino-h {
     display: flex;
@@ -52,19 +129,22 @@
 
 .domino-h .divider {
     width: 2px;
-    height: 80%;
-    background: #94a3b8;
+    height: 75%;
+    background: linear-gradient(180deg, transparent, var(--ficha-borde), transparent);
     margin: 0 3px;
     border-radius: 1px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.3);
 }
 .domino-v .divider {
     height: 2px;
-    width: 80%;
-    background: #94a3b8;
+    width: 75%;
+    background: linear-gradient(90deg, transparent, var(--ficha-borde), transparent);
     margin: 3px 0;
     border-radius: 1px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.3);
 }
 
+/* Pips */
 .pip-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -73,31 +153,35 @@
     height: 100%;
     padding: 5px;
     box-sizing: border-box;
-    gap: 0.5px;
+    gap: 1px;
 }
 .pip {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #475569, #0f172a);
+    background: radial-gradient(circle at 35% 30%, var(--pip-color-1), var(--pip-color-2) 80%);
     align-self: center;
     justify-self: center;
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.25);
+    box-shadow:
+        inset 0 1px 1px rgba(255,255,255,0.4),
+        0 0 2px rgba(0,0,0,0.4);
 }
 .pip-empty { visibility: hidden; }
 
+/* ============================================
+   SCROLLBARS
+   ============================================ */
 .board-scroll {
     scrollbar-width: thin;
-    scrollbar-color: #10b981 #1e293b;
+    scrollbar-color: var(--acento) #1e293b;
 }
 .board-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
 .board-scroll::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
-.board-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+.board-scroll::-webkit-scrollbar-thumb { background: var(--acento); border-radius: 4px; }
 
 /* ============================================
-   MESA REAL (fichas serpenteantes)
+   MESA REAL (serpenteante)
    ============================================ */
-
 .mesa-real {
     display: flex;
     flex-wrap: wrap;
@@ -114,22 +198,109 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
-/* En pantallas chicas, menos espacio entre fichas */
-@media (max-width: 640px) {
-    .mesa-real {
-        gap: 2px;
-        padding: 4px;
-    }
-    .mesa-superficie {
-        padding: 10px;
-    }
+/* Sombra proyectada sobre la mesa */
+.mesa-real .ficha-tile::before {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 10%;
+    right: 10%;
+    height: 6px;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.5), transparent 70%);
+    border-radius: 50%;
+    z-index: -1;
 }
 
+/* ============================================
+   ANIMACIONES
+   ============================================ */
 @keyframes ficha-entra {
     0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
-    60%  { transform: scale(1.1) rotate(3deg); opacity: 1; }
+    60%  { transform: scale(1.12) rotate(4deg); opacity: 1; }
+    80%  { transform: scale(0.98) rotate(-1deg); }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
-.domino-tile { animation: ficha-entra 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Solo las fichas NUEVAS del tablero animan */
+.ficha-tile.nueva .domino-tile {
+    animation: ficha-entra 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pulso-turno {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+    50%      { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+}
+.turno-pulso {
+    animation: pulso-turno 1.5s infinite;
+    border-radius: 9999px;
+}
+
+@keyframes brillo-ficha {
+    0%, 100% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.4), 0 3px 6px rgba(0,0,0,0.4); }
+    50%      { box-shadow: 0 0 22px rgba(16, 185, 129, 0.9), 0 3px 6px rgba(0,0,0,0.4); }
+}
+.ficha-jugable {
+    animation: brillo-ficha 2s infinite;
+}
+
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(15px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.modal-entra {
+    animation: fade-in-up 0.3s ease-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-6px); }
+    75%      { transform: translateX(6px); }
+}
+.shake { animation: shake 0.3s ease-in-out; }
+
+/* ============================================
+   MÓVIL
+   ============================================ */
+@media (max-width: 640px) {
+    .mesa-real { gap: 2px; padding: 4px; }
+    .mesa-superficie { padding: 10px; }
+    button { touch-action: manipulation; }
+    html, body { overscroll-behavior: none; }
+    .domino-tile { -webkit-tap-highlight-color: transparent; }
+}
+
+/* Evitar selección accidental en móvil */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+input, textarea, select { -webkit-user-select: text; user-select: text; }
+
+/* ============================================
+   SELECTOR DE TEMA
+   ============================================ */
+.tema-selector {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.tema-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.tema-btn:hover { transform: scale(1.1); }
+.tema-btn.activo { border-color: #ffffff; transform: scale(1.15); }
+.tema-btn[data-tema="clasico"]  { background: linear-gradient(135deg, #236351, #ffffff); }
+.tema-btn[data-tema="nocturno"] { background: linear-gradient(135deg, #1e293b, #fbbf24); }
+.tema-btn[data-tema="madera"]   { background: linear-gradient(135deg, #92400e, #fde68a); }
+.tema-btn[data-tema="moderno"]  { background: linear-gradient(135deg, #4338ca, #a78bfa); }
